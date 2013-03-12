@@ -17,7 +17,7 @@ public class CliExecutor implements ICliExecutor {
 	private static final Logger mLog = Logger.getLogger(CliExecutor.class);
 	private DefaultExecutor mExecutor;
 	// TODO: inject from properties
-	private static final String WORKING_DIR = "c:\\";
+	private static final String WORKING_DIR = "/";
 	private ByteArrayOutputStream mStdout;
 
 	private DefaultExecutor getExecutor() {
@@ -45,7 +45,7 @@ public class CliExecutor implements ICliExecutor {
 		mExecutor.setWatchdog(watchDog);
 		// Setting the working directory
 		// Use of recursion along with the ls makes this a long running process
-		mExecutor.setWorkingDirectory(new File(WORKING_DIR));
+		//mExecutor.setWorkingDirectory(new File(WORKING_DIR));
 		mExecutor.setProcessDestroyer(processDestroyer);
 	}
 

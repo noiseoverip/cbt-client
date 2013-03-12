@@ -1,6 +1,8 @@
 package com.cbg.guicemodules;
 
 import com.cbt.client.CbtClient;
+import com.cbt.client.adb.AdbApi;
+import com.cbt.clientws.CbtWsClientApi;
 import com.cbt.cliexecutor.CliExecutor;
 import com.cbt.cliexecutor.ICliExecutor;
 import com.cbt.executor.ITestExecutor;
@@ -17,6 +19,8 @@ public class MainModule extends AbstractModule {
 		bind(IApplicationInstaller.class).to(ApplicationInstaller.class);
 		bind(ICliExecutor.class).to(CliExecutor.class);
 		bind(ITestExecutor.class).to(TestExecutor.class);
+		bind(AdbApi.class);
+		bind(CbtWsClientApi.class);
 	}
 	
 }

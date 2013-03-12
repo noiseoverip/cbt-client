@@ -1,12 +1,8 @@
 package com.cbt.executor;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 
 import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecuteResultHandler;
-import org.apache.commons.exec.ExecuteException;
 import org.apache.log4j.Logger;
 
 import com.cbt.annotations.PathAndroidToolAdb;
