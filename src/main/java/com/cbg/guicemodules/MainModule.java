@@ -1,6 +1,9 @@
 package com.cbg.guicemodules;
 
+import javax.inject.Singleton;
+
 import com.cbt.client.CbtClient;
+import com.cbt.client.Store;
 import com.cbt.client.adb.AdbApi;
 import com.cbt.clientws.CbtWsClientApi;
 import com.cbt.cliexecutor.CliExecutor;
@@ -21,6 +24,7 @@ public class MainModule extends AbstractModule {
 		bind(ITestExecutor.class).to(TestExecutor.class);
 		bind(AdbApi.class);
 		bind(CbtWsClientApi.class);
+		bind(Store.class).in(Singleton.class);
 	}
 	
 }

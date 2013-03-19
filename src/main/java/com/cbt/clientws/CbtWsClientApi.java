@@ -1,7 +1,5 @@
 package com.cbt.clientws;
 
-import static org.junit.Assert.assertEquals;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
@@ -29,13 +27,37 @@ public class CbtWsClientApi {
 		mWsUrl = wsUrl;
 	}
 	
-	public Long registerDevice(Device device) {
+	/**
+	 * Register new device
+	 * 
+	 * @param device
+	 * @return
+	 * @throws CbtClientException
+	 */
+	public Long registerDevice(Device device) throws CbtClientException {
 		WebResource webResource = getClient().resource(mWsUrl);
 		ClientResponse response = webResource.path("device").type(MediaType.APPLICATION_JSON_TYPE)
 				.accept(MediaType.TEXT_HTML).put(ClientResponse.class, device);
 		mLogger.debug(response);
-		assertEquals(ClientResponse.Status.OK.getStatusCode(), response.getStatus());
+		if (response.getStatus() != ClientResponse.Status.OK.getStatusCode()) {
+			throw new CbtClientException("Failed to register new device");
+		}
 		return Long.valueOf(response.getEntity(String.class));
+	}
+	
+	/**
+	 * Update device
+	 * 
+	 * @param device
+	 * @throws CbtClientException
+	 */
+	public void updatedevice(Device device) throws CbtClientException {
+		WebResource webResource = getClient().resource(mWsUrl);
+		ClientResponse response = webResource.path("device/" + device.getId()).type(MediaType.APPLICATION_JSON_TYPE)
+				.post(ClientResponse.class, device);		
+		if (response.getStatus() != ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+			throw new CbtClientException("Failed to update device, response:" + response);
+		}
 	}
 	
 	private Client getClient() {
