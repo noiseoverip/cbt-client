@@ -2,20 +2,21 @@ package com.cbt.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
 
 import com.cbt.ws.entity.Device;
 
 public class Store {
-	private List<Device> mDevices;
+	private Vector<Device> mDevices = new Vector<Device>(5);
 	
 	/**
 	 * Return device id based on it's serial number if it is defined in file "devices"
 	 * 
 	 * @param deviceSerialNumber
 	 * @return
+	 * @deprecated
 	 */
 	public Long getDeviceId(String deviceSerialNumber) {
 		if (null == deviceSerialNumber) {
@@ -41,14 +42,21 @@ public class Store {
 		return (null != deviceId) ? Long.valueOf(deviceId) : null;		
 	}
 	
+	/**
+	 * Get all registered devices
+	 * 
+	 * @return
+	 */
 	public List<Device> getDevices() {
 		return mDevices;
 	}
 	
-	public void addDevice(Device device) {
-		if (null == mDevices) {
-			mDevices = new ArrayList<Device>(5);
-		}
+	/**
+	 * Register new device
+	 * 
+	 * @param device
+	 */
+	public void addDevice(Device device) {		
 		mDevices.add(device);
 	}
 	

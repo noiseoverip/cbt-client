@@ -43,50 +43,17 @@ public class CbtClient {
 
 	public void start() {		
 		
-		//TODO: make this a periodic task
-		// Scan devices
-		List<String> deviceNames = null;
-		try {
-			deviceNames = mAdbApi.getDevices();
-		} catch (Exception e) {
-			mLog.error("Could not find any device attached");
-			return;
-		}
-		for (String deviceName : deviceNames) {
-			mLog.info("Checking device:" + deviceName);
-			Device device = new Device();
-			Long deviceId = mStore.getDeviceId(deviceName);
-			if (deviceId != null) {
-				mLog.info("Device found to be registered, name: " + deviceName + " id:" + deviceId);
-				device.setId(deviceId);
-			}			
-			device.setUserId(mUserId);
-			device.setDeviceTypeId(1L);
-			device.setDeviceOsId(1L);		
-			device.setSerialNumber(deviceName);
-			
-			if (null == deviceId) {
-				try {
-					deviceId = mWsApi.registerDevice(device);
-				} catch (CbtWsClientException e) {
-					mLog.error("Could not registerdevice:" + device);
-				}
-			}
-			if (null != deviceId && deviceId > 0) {
-				mLog.info("Success register/loaded device:" + deviceName + " id:" + deviceId);
-				mStore.addDevice(device);
-			}
-		}
-		
 		mDeviceMonitorExecutor = Executors.newScheduledThreadPool(1);
 		mDeviceMonitorExecutor.scheduleAtFixedRate(mStatusUpdater, 1, 2, TimeUnit.SECONDS);
 		
-//		try {
-//			TimeUnit.SECONDS.sleep(30);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+			TimeUnit.SECONDS.sleep(30);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		mDeviceMonitorExecutor.shutdownNow();
 		
 		
 		// Register devices

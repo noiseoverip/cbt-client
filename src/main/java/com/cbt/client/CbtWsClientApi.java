@@ -27,6 +27,7 @@ public class CbtWsClientApi {
 		mWsUrl = wsUrl;
 	}
 	
+	//TODO: need to handle registering existing device
 	/**
 	 * Register new device
 	 * 

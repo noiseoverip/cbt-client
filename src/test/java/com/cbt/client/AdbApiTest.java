@@ -1,4 +1,4 @@
-package com.cbt.client.adb;
+package com.cbt.client;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
