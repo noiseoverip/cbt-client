@@ -13,7 +13,7 @@ public class Main {
 		
 		mLog.info("Starting application");
 		
-		Injector injector = Guice.createInjector(new MainModule(), new PropertiesModule());
+		Injector injector = Guice.createInjector(new GModuleMain(), new GModuleProperties());
 	    CbtClient client = injector.getInstance(CbtClient.class);
 	    client.start();
 	    

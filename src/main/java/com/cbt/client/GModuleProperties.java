@@ -6,7 +6,13 @@ import com.cbt.client.annotations.TempStoragePath;
 import com.cbt.client.annotations.UserId;
 import com.google.inject.AbstractModule;
 
-public class PropertiesModule extends AbstractModule {
+/**
+ * Guice for module binding properties
+ * 
+ * @author SauliusAlisauskas 2013-03-18 Initial version
+ *
+ */
+public class GModuleProperties extends AbstractModule {
 
 	@Override
 	protected void configure() {
