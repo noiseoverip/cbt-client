@@ -1,19 +1,17 @@
-package com.cbt.installer;
+package com.cbt.client;
 
 import javax.inject.Inject;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
-import com.cbt.annotations.PathAndroidToolAdb;
-import com.cbt.cliexecutor.ICliExecutor;
-import com.cbt.model.TestPackage;
+import com.cbt.client.annotations.PathAndroidToolAdb;
 
-public class ApplicationInstaller implements IApplicationInstaller {
+public class ApplicationInstaller {
 
 	private static final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
 
-	private ICliExecutor mExecutor;
+	private CliExecutor mExecutor;
 	private TestPackage mTestPkg;
 	private String mPathADB;
 
@@ -23,17 +21,15 @@ public class ApplicationInstaller implements IApplicationInstaller {
 	private static final String ENV_CBT_WS = "c:\\Dev\\CBT\\";
 
 	@Inject
-	public ApplicationInstaller(ICliExecutor cliExecutor, @PathAndroidToolAdb String pathAdb) {
+	public ApplicationInstaller(CliExecutor cliExecutor, @PathAndroidToolAdb String pathAdb) {
 		mExecutor = cliExecutor;
 		mPathADB = pathAdb;
 	}
-
-	@Override
+	
 	public void setTestPackage(TestPackage testPkg) {
 		mTestPkg = testPkg;
 	}
-
-	@Override
+	
 	public void installApp() throws Exception {
 
 		String commandString = mPathADB + " install -r " + ENV_CBT_WS + "apps\\" + mTestPkg.getAppFileName();		
@@ -47,8 +43,7 @@ public class ApplicationInstaller implements IApplicationInstaller {
 		}
 		mLog.info("output:\n" + mExecutor.getOutput());
 	}
-
-	@Override
+	
 	public void installTest() throws Exception {
 		String commandString = String.format(mPathADB + " push " + ENV_CBT_WS + "tests\\%s /data/local/tmp",
 				mTestPkg.getTestFileName());	

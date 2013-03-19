@@ -8,7 +8,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import com.cbt.cliexecutor.CliExecutor;
+import com.cbt.client.AdbApi;
+import com.cbt.client.CliExecutor;
 
 public class AdbApiTest {
 	private Logger mLogger = Logger.getLogger(AdbApiTest.class);

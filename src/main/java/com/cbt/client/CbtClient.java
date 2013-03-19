@@ -9,20 +9,18 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 
-import com.cbt.annotations.UserId;
-import com.cbt.client.adb.AdbApi;
-import com.cbt.clientws.CbtClientException;
-import com.cbt.clientws.CbtWsClientApi;
-import com.cbt.clientws.StatusUpdater;
-import com.cbt.executor.ITestExecutor;
-import com.cbt.installer.ApplicationInstaller;
-import com.cbt.installer.IApplicationInstaller;
+import com.cbt.client.annotations.UserId;
 import com.cbt.ws.entity.Device;
 
+/**
+ * Main CBT client class
+ * 
+ * @author SauliusAlisauskas 2013-03-19 Initial version
+ *
+ */
 public class CbtClient {
-
-	private IApplicationInstaller mInstaller;
-	private ITestExecutor mTestExecutor;
+	private ApplicationInstaller mInstaller;
+	private TestExecutor mTestExecutor;
 	private AdbApi mAdbApi;
 	private CbtWsClientApi mWsApi;
 	private Long mUserId;
@@ -33,7 +31,7 @@ public class CbtClient {
 	private static final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
 
 	@Inject
-	public CbtClient(StatusUpdater statusUpdater, IApplicationInstaller installer, ITestExecutor testExecutor, AdbApi adbApi, CbtWsClientApi wsApi, @UserId Long userId, Store store) {
+	public CbtClient(StatusUpdater statusUpdater, ApplicationInstaller installer, TestExecutor testExecutor, AdbApi adbApi, CbtWsClientApi wsApi, @UserId Long userId, Store store) {
 		mInstaller = installer;
 		mTestExecutor = testExecutor;
 		mAdbApi = adbApi;
@@ -70,7 +68,7 @@ public class CbtClient {
 			if (null == deviceId) {
 				try {
 					deviceId = mWsApi.registerDevice(device);
-				} catch (CbtClientException e) {
+				} catch (CbtWsClientException e) {
 					mLog.error("Could not registerdevice:" + device);
 				}
 			}

@@ -1,36 +1,31 @@
-package com.cbt.executor;
+package com.cbt.client;
 
 import javax.inject.Inject;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
-import com.cbt.annotations.PathAndroidToolAdb;
-import com.cbt.cliexecutor.ICliExecutor;
-import com.cbt.installer.ApplicationInstaller;
-import com.cbt.model.TestPackage;
+import com.cbt.client.annotations.PathAndroidToolAdb;
 
-public class TestExecutor implements ITestExecutor {
+public class TestExecutor {
 
 	
 	private String mPathADB;
 	private TestPackage mTestPkg;
-	private ICliExecutor mExecutor;	
+	private CliExecutor mExecutor;	
 			
 	@Inject
-	public TestExecutor(ICliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
+	public TestExecutor(CliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
 		mExecutor = cliExecutor;
 		mPathADB = pathADB;
 	}
 
 	private static final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
 
-	@Override
 	public void setTestPackage(TestPackage testPkg) {
 		mTestPkg = testPkg;
 	}
 
-	@Override
 	public void execute() throws Exception {
 		/**
 		 * call adb shell uiautomator runtest OneButtonUiTest.jar -c com.test.UIPushButtonTest

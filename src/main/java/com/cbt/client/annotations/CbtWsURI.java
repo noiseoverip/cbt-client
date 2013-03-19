@@ -1,4 +1,4 @@
-package com.cbt.annotations;
+package com.cbt.client.annotations;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -11,4 +11,4 @@ import java.lang.annotation.Target;
 import com.google.inject.BindingAnnotation;
 
 @BindingAnnotation @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface PathAndroidToolAdb {}
+public @interface CbtWsURI {}

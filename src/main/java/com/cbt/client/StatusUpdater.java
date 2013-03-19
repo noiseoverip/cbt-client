@@ -1,11 +1,9 @@
-package com.cbt.clientws;
+package com.cbt.client;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.cbt.client.Store;
-import com.cbt.client.adb.AdbApi;
 import com.cbt.ws.entity.Device;
 import com.cbt.ws.jooq.enums.DeviceState;
 import com.google.inject.Inject;
@@ -48,7 +46,7 @@ public class StatusUpdater implements Runnable {
 			}
 			try {
 				mWsApi.updatedevice(device);
-			} catch (CbtClientException e) {
+			} catch (CbtWsClientException e) {
 				mLog.error("Could not update device:" + device);
 			}			
 		}

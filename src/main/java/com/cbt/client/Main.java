@@ -2,8 +2,6 @@ package com.cbt.client;
 
 import org.apache.log4j.Logger;
 
-import com.cbg.guicemodules.MainModule;
-import com.cbg.guicemodules.PropertiesModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 

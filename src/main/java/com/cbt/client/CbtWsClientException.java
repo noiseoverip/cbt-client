@@ -1,4 +1,4 @@
-package com.cbt.clientws;
+package com.cbt.client;
 
 /**
  * Base exception class for Cbt client exceptions
@@ -6,18 +6,18 @@ package com.cbt.clientws;
  * @author SauliusAlisauskas 2013-03-18 Initial version
  *
  */
-public class CbtClientException extends Exception {
+public class CbtWsClientException extends Exception {
 	
 	/**
 	 * Auto-generated value
 	 */
 	private static final long serialVersionUID = 2889478159029254411L;
 
-	public CbtClientException(String message, Throwable t) {
+	public CbtWsClientException(String message, Throwable t) {
 		super(message, t);
 	}
 	
-	public CbtClientException(String message) {
+	public CbtWsClientException(String message) {
 		super(message);
 	}
 }

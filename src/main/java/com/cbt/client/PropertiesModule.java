@@ -1,9 +1,9 @@
-package com.cbg.guicemodules;
+package com.cbt.client;
 
-import com.cbt.annotations.CbtWsURI;
-import com.cbt.annotations.PathAndroidToolAdb;
-import com.cbt.annotations.TempStoragePath;
-import com.cbt.annotations.UserId;
+import com.cbt.client.annotations.CbtWsURI;
+import com.cbt.client.annotations.PathAndroidToolAdb;
+import com.cbt.client.annotations.TempStoragePath;
+import com.cbt.client.annotations.UserId;
 import com.google.inject.AbstractModule;
 
 public class PropertiesModule extends AbstractModule {

@@ -1,4 +1,4 @@
-package com.cbt.model;
+package com.cbt.client;
 
 public class TestPackage {
 

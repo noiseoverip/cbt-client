@@ -1,10 +1,10 @@
-package com.cbt.clientws;
+package com.cbt.client;
 
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 
-import com.cbt.annotations.CbtWsURI;
+import com.cbt.client.annotations.CbtWsURI;
 import com.cbt.ws.entity.Device;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
@@ -32,15 +32,15 @@ public class CbtWsClientApi {
 	 * 
 	 * @param device
 	 * @return
-	 * @throws CbtClientException
+	 * @throws CbtWsClientException
 	 */
-	public Long registerDevice(Device device) throws CbtClientException {
+	public Long registerDevice(Device device) throws CbtWsClientException {
 		WebResource webResource = getClient().resource(mWsUrl);
 		ClientResponse response = webResource.path("device").type(MediaType.APPLICATION_JSON_TYPE)
 				.accept(MediaType.TEXT_HTML).put(ClientResponse.class, device);
 		mLogger.debug(response);
 		if (response.getStatus() != ClientResponse.Status.OK.getStatusCode()) {
-			throw new CbtClientException("Failed to register new device");
+			throw new CbtWsClientException("Failed to register new device");
 		}
 		return Long.valueOf(response.getEntity(String.class));
 	}
@@ -49,14 +49,14 @@ public class CbtWsClientApi {
 	 * Update device
 	 * 
 	 * @param device
-	 * @throws CbtClientException
+	 * @throws CbtWsClientException
 	 */
-	public void updatedevice(Device device) throws CbtClientException {
+	public void updatedevice(Device device) throws CbtWsClientException {
 		WebResource webResource = getClient().resource(mWsUrl);
 		ClientResponse response = webResource.path("device/" + device.getId()).type(MediaType.APPLICATION_JSON_TYPE)
 				.post(ClientResponse.class, device);		
 		if (response.getStatus() != ClientResponse.Status.NO_CONTENT.getStatusCode()) {
-			throw new CbtClientException("Failed to update device, response:" + response);
+			throw new CbtWsClientException("Failed to update device, response:" + response);
 		}
 	}
 	

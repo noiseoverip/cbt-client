@@ -1,29 +1,24 @@
-package com.cbt.client.adb;
+package com.cbt.client;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.ExecuteException;
 import org.apache.log4j.Logger;
 
-import com.cbt.annotations.PathAndroidToolAdb;
-import com.cbt.cliexecutor.ICliExecutor;
-import com.cbt.model.TestPackage;
+import com.cbt.client.annotations.PathAndroidToolAdb;
 
 public class AdbApi {
 
 	private String mPathAdb;
 	private TestPackage mTestPkg;
-	private ICliExecutor mExecutor;
+	private CliExecutor mExecutor;
 	private static final Logger mLog = Logger.getLogger(AdbApi.class);
 
 	@Inject
-	public AdbApi(ICliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
+	public AdbApi(CliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
 		mExecutor = cliExecutor;
 		mPathAdb = pathADB;
 	}

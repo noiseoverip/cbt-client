@@ -1,7 +1,6 @@
-package com.cbt.cliexecutor;
+package com.cbt.client;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.exec.CommandLine;
@@ -12,7 +11,7 @@ import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.ShutdownHookProcessDestroyer;
 import org.apache.log4j.Logger;
 
-public class CliExecutor implements ICliExecutor {
+public class CliExecutor {
 
 	private static final Logger mLog = Logger.getLogger(CliExecutor.class);
 	private DefaultExecutor mExecutor;
@@ -49,12 +48,10 @@ public class CliExecutor implements ICliExecutor {
 		mExecutor.setProcessDestroyer(processDestroyer);
 	}
 
-	@Override
 	public boolean isFailure(int exitValue) {
 		return getExecutor().isFailure(exitValue);
 	}
 
-	@Override
 	public int execute(CommandLine command) throws ExecuteException, IOException {
 		mLog.info("exec sync: " + command.toString());
 		mStdout = new ByteArrayOutputStream();
@@ -62,7 +59,6 @@ public class CliExecutor implements ICliExecutor {
 		return getExecutor().execute(command);
 	}
 
-	@Override
 	public String getOutput() {
 		String output = mStdout.toString();
 		try {
