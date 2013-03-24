@@ -2,15 +2,27 @@ package com.cbt.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.cbt.ws.entity.Device;
 
 public class Store {
-	private Vector<Device> mDevices = new Vector<Device>(5);
-	
+	private ConcurrentHashMap<String, Device> mDevices = new ConcurrentHashMap<String, Device>(5);
+
+	/**
+	 * Register new device
+	 * 
+	 * @param device
+	 */
+	public void addDevice(Device device) {
+		mDevices.put(device.getSerialNumber(), device);
+	}
+
+	public boolean contains(String deviceSerial) {
+		return mDevices.containsKey(deviceSerial);
+	}
+
 	/**
 	 * Return device id based on it's serial number if it is defined in file "devices"
 	 * 
@@ -39,25 +51,19 @@ public class Store {
 			return null;
 		}
 		String deviceId = prop.getProperty(deviceSerialNumber);
-		return (null != deviceId) ? Long.valueOf(deviceId) : null;		
+		return (null != deviceId) ? Long.valueOf(deviceId) : null;
 	}
-	
+
 	/**
 	 * Get all registered devices
 	 * 
 	 * @return
 	 */
-	public List<Device> getDevices() {
+	public ConcurrentHashMap<String, Device> getDevices() {
 		return mDevices;
 	}
-	
-	/**
-	 * Register new device
-	 * 
-	 * @param device
-	 */
-	public void addDevice(Device device) {		
-		mDevices.add(device);
+
+	public void remove(Device device) {
+		mDevices.remove(device.getSerialNumber());
 	}
-	
 }

@@ -9,18 +9,53 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
 import com.cbt.client.annotations.PathAndroidToolAdb;
+import com.cbt.ws.entity.TestPackage;
+
 
 public class AdbApi {
 
+	private static final Logger mLog = Logger.getLogger(AdbApi.class);
+	private CliExecutor mExecutor;
 	private String mPathAdb;
 	private TestPackage mTestPkg;
-	private CliExecutor mExecutor;
-	private static final Logger mLog = Logger.getLogger(AdbApi.class);
 
 	@Inject
 	public AdbApi(CliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
 		mExecutor = cliExecutor;
 		mPathAdb = pathADB;
+	}
+
+	private void execHandleExitValue(final String commandString) throws Exception {
+		final CommandLine command = CommandLine.parse(commandString);
+		final int exitValue = mExecutor.execute(command);
+		mLog.info("Exit value:" + exitValue);
+		if (mExecutor.isFailure(exitValue)) {
+			throw new Exception("Failed");
+		} else {
+			mLog.info("Success");
+		}
+	}
+	
+	// TODO: parse version properly
+	/**
+	 * Get adb version
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String getAdbVersion() throws Exception {
+		String commandString = String.format(mPathAdb + " version");
+		CommandLine command = CommandLine.parse(commandString);
+		int exitValue = mExecutor.execute(command);
+		mLog.info("Exit value:" + exitValue);
+		if (mExecutor.isFailure(exitValue)) {
+			throw new Exception("Failed");
+		} else {
+			mLog.info("Success");
+		}
+		mLog.info("output:\n" + mExecutor.getOutput());
+		String version = mExecutor.getOutput();
+		return mExecutor.getOutput();
 	}
 
 	/**
@@ -46,39 +81,6 @@ public class AdbApi {
 			}
 		}
 		return devices;
-	}
-	
-	private void execHandleExitValue(final String commandString) throws Exception {
-		final CommandLine command = CommandLine.parse(commandString);
-		final int exitValue = mExecutor.execute(command);
-		mLog.info("Exit value:" + exitValue);
-		if (mExecutor.isFailure(exitValue)) {
-			throw new Exception("Failed");
-		} else {
-			mLog.info("Success");
-		}
-	}
-
-	// TODO: parse version properly
-	/**
-	 * Get adb version
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public String getAdbVersion() throws Exception {
-		String commandString = String.format(mPathAdb + " version");
-		CommandLine command = CommandLine.parse(commandString);
-		int exitValue = mExecutor.execute(command);
-		mLog.info("Exit value:" + exitValue);
-		if (mExecutor.isFailure(exitValue)) {
-			throw new Exception("Failed");
-		} else {
-			mLog.info("Success");
-		}
-		mLog.info("output:\n" + mExecutor.getOutput());
-		String version = mExecutor.getOutput();
-		return mExecutor.getOutput();
 	}
 
 }

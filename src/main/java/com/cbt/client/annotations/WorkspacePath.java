@@ -11,4 +11,4 @@ import java.lang.annotation.Target;
 import com.google.inject.BindingAnnotation;
 
 @BindingAnnotation @Target({ FIELD, PARAMETER, METHOD }) @Retention(RUNTIME)
-public @interface TempStoragePath {}
+public @interface WorkspacePath {}

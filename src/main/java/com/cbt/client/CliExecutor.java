@@ -15,9 +15,14 @@ public class CliExecutor {
 
 	private static final Logger mLog = Logger.getLogger(CliExecutor.class);
 	private DefaultExecutor mExecutor;
-	// TODO: inject from properties
-	private static final String WORKING_DIR = "/";
 	private ByteArrayOutputStream mStdout;
+
+	public int execute(CommandLine command) throws ExecuteException, IOException {
+		mLog.info("exec sync: " + command.toString());
+		mStdout = new ByteArrayOutputStream();
+		getExecutor().setStreamHandler(new PumpStreamHandler(mStdout));
+		return getExecutor().execute(command);
+	}
 
 	private DefaultExecutor getExecutor() {
 		if (null == mExecutor) {
@@ -29,6 +34,16 @@ public class CliExecutor {
 			}
 		}
 		return mExecutor;
+	}
+
+	public String getOutput() {
+		String output = mStdout.toString();
+		try {
+			mStdout.flush();
+		} catch (IOException e) {
+			mLog.error("Could not flush output stream");
+		}
+		return output;
 	}
 
 	private void init() throws IOException {
@@ -44,28 +59,11 @@ public class CliExecutor {
 		mExecutor.setWatchdog(watchDog);
 		// Setting the working directory
 		// Use of recursion along with the ls makes this a long running process
-		//mExecutor.setWorkingDirectory(new File(WORKING_DIR));
+		// mExecutor.setWorkingDirectory(new File(WORKING_DIR));
 		mExecutor.setProcessDestroyer(processDestroyer);
 	}
 
 	public boolean isFailure(int exitValue) {
 		return getExecutor().isFailure(exitValue);
-	}
-
-	public int execute(CommandLine command) throws ExecuteException, IOException {
-		mLog.info("exec sync: " + command.toString());
-		mStdout = new ByteArrayOutputStream();
-		getExecutor().setStreamHandler(new PumpStreamHandler(mStdout));
-		return getExecutor().execute(command);
-	}
-
-	public String getOutput() {
-		String output = mStdout.toString();
-		try {
-			mStdout.flush();
-		} catch (IOException e) {
-			mLog.error("Could not flush output stream");
-		}
-		return output;
 	}
 }
