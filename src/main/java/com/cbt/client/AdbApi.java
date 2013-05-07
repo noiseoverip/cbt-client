@@ -8,21 +8,22 @@ import javax.inject.Inject;
 import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
-import com.cbt.client.annotations.PathAndroidToolAdb;
-import com.cbt.ws.entity.TestPackage;
-
-
+/**
+ * Android ADB wrapper
+ * 
+ * @author SauliusAlisauskas
+ *
+ */
 public class AdbApi {
 
 	private static final Logger mLog = Logger.getLogger(AdbApi.class);
 	private CliExecutor mExecutor;
 	private String mPathAdb;
-	private TestPackage mTestPkg;
 
 	@Inject
-	public AdbApi(CliExecutor cliExecutor, @PathAndroidToolAdb String pathADB) {
+	public AdbApi(CliExecutor cliExecutor, Configuration config) {
 		mExecutor = cliExecutor;
-		mPathAdb = pathADB;
+		mPathAdb = config.getPathAndroidADB();
 	}
 
 	private void execHandleExitValue(final String commandString) throws Exception {
@@ -54,7 +55,6 @@ public class AdbApi {
 			mLog.info("Success");
 		}
 		mLog.info("output:\n" + mExecutor.getOutput());
-		String version = mExecutor.getOutput();
 		return mExecutor.getOutput();
 	}
 
@@ -82,5 +82,4 @@ public class AdbApi {
 		}
 		return devices;
 	}
-
 }

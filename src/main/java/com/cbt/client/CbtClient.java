@@ -11,7 +11,6 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 
-import com.cbt.client.annotations.UserId;
 import com.cbt.ws.entity.Device;
 import com.google.inject.Injector;
 
@@ -28,14 +27,16 @@ public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
 	private Injector mInjector;
 	private final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
 	private Store mStore;
-	private Long mUserId;
+	private Configuration mConfig;
+	private CbtWsClientApi mCbtClientApi;
 
 	@Inject
-	public CbtClient(AdbMonitor statusUpdater, @UserId Long userId, Store store, Injector injector) {		
-		mUserId = userId;
+	public CbtClient(AdbMonitor statusUpdater, Store store, Injector injector, Configuration config, CbtWsClientApi cbtClientApi) {
+		mConfig = config;
 		mStore = store;
 		mAdbMonitor = statusUpdater;
 		mInjector = injector;
+		mCbtClientApi = cbtClientApi;
 	}
 
 	private synchronized void addDeviceWorkerFuture(Device device, ScheduledFuture<?> future) {
@@ -52,35 +53,49 @@ public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
 		ScheduledFuture<?> future = getDeviceWorkerFuture(device);
 		future.cancel(true);
 		mStore.remove(device);
-		
+
 	}
-	
+
 	@Override
 	public void onNewDeviceFound(Device device) {
 		mLog.info("Adding device worker " + device);
-		device.setUserId(mUserId);
+		device.setUserId(mConfig.getUserId());
 		mStore.addDevice(device);
 		DeviceWorker worker = mInjector.getInstance(DeviceWorker.class);
 		worker.setCallback(this);
 		worker.setDevice(device);
 		worker.setCallback(this);
-		ScheduledFuture<?> future = mDeviceMonitorExecutor.scheduleAtFixedRate(worker, 1, 3, TimeUnit.SECONDS);
+		ScheduledFuture<?> future = mDeviceMonitorExecutor.scheduleAtFixedRate(worker, 1, 5, TimeUnit.SECONDS);
 		addDeviceWorkerFuture(device, future);
 
 	}
-	
-	public void start() {
-		
-		mAdbMonitor.setCallback(this);
-		mDeviceMonitorExecutor = Executors.newScheduledThreadPool(4);
-		mDeviceMonitorExecutor.scheduleAtFixedRate(mAdbMonitor, 1, 20, TimeUnit.SECONDS);
 
-		try {
-			TimeUnit.SECONDS.sleep(9000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+	public void start() {
+		if (authenticate()) {
+			mAdbMonitor.setCallback(this);
+			mDeviceMonitorExecutor = Executors.newScheduledThreadPool(4);
+			mDeviceMonitorExecutor.scheduleAtFixedRate(mAdbMonitor, 1, 10, TimeUnit.SECONDS);
+
+			try {
+				TimeUnit.SECONDS.sleep(9000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			mLog.error("Could not authenticate");
+		}
+	}
+
+	private boolean authenticate() {
+		Map<String, Object> userProperties = mCbtClientApi.getUserByName(mConfig.getUserName()) ;
+		if (userProperties!= null) {
+			mLog.info("Authenticated user:" + userProperties);
+			mConfig.setUserId(Long.valueOf(userProperties.get("id").toString()));
+			mLog.info("Set user id to" + mConfig.getUserId());
+			return true;
+		}
+		return false;
 	}
 
 }

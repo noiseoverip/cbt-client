@@ -1,25 +1,38 @@
 package com.cbt.client;
 
-import com.cbt.client.annotations.CbtWsURI;
-import com.cbt.client.annotations.PathAndroidToolAdb;
-import com.cbt.client.annotations.WorkspacePath;
-import com.cbt.client.annotations.UserId;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.inject.Singleton;
+
+import org.apache.log4j.Logger;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 /**
  * Guice for module binding properties
  * 
  * @author SauliusAlisauskas 2013-03-18 Initial version
- *
+ * 
  */
 public class GModuleProperties extends AbstractModule {
-
+	
+	private final Logger mLogger = Logger.getLogger(GModuleProperties.class);
+	
 	@Override
 	protected void configure() {
-		//bind(String.class).annotatedWith(PathAndroidToolAdb.class).toInstance("C:\\Dev\\Tools\\android-sdk\\platform-tools\\adb");
-		bind(String.class).annotatedWith(PathAndroidToolAdb.class).toInstance("/home/saulius/Documents/dev/adt-bundle-linux-x86_64-20130219/sdk/platform-tools/adb");
-		bind(String.class).annotatedWith(WorkspacePath.class).toInstance("/home/saulius/Documents/cbt/client_workspace/");
-		bind(Long.class).annotatedWith(UserId.class).toInstance(1L);
-		bind(String.class).annotatedWith(CbtWsURI.class).toInstance("http://127.0.0.1:8081");		
+		Properties properties = new Properties();
+		try {
+			properties.load(new FileReader(this.getClass().getResource("/client.properties").getPath()));
+			Names.bindProperties(binder(), properties);
+		} catch (FileNotFoundException e) {
+			mLogger.error("The configuration file Test.properties can not be found", e);
+		} catch (IOException e) {
+			mLogger.error("I/O Exception during loading configuration", e);
+		}		
+		bind(Configuration.class).in(Singleton.class);
 	}
 }

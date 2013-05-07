@@ -1,10 +1,7 @@
 package com.cbt.client;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +39,7 @@ public class DeviceWorkerTest {
 	public void before() {
 		mDevice = new Device();
 		mDevice.setState(DeviceState.OFFLINE);
-		mDevice.setSerialNumber(mTestDevices.get(0));
+		mDevice.setSerialnumber(mTestDevices.get(0));
 		mDevice.setId(new Random().nextLong());
 		mAdbApi = mock(AdbApi.class);
 		mWsApi = mock(CbtWsClientApi.class);
@@ -92,10 +89,8 @@ public class DeviceWorkerTest {
 		verify(mWsApi, times(1)).updatedevice(any(Device.class));
 		verify(mWsApi, times(1)).getWaitingJob(any(Device.class));
 		verify(mInstaller, times(1)).setTestPackage(any(TestPackage.class));
-		verify(mInstaller, times(1)).installTest(any(String.class));
+		verify(mInstaller, times(1)).installTestScript(any(String.class));
 		verify(mInstaller, times(1)).installApp(any(String.class));
-		verify(mTestExecutor, times(1)).execute();
-		
-		
+		verify(mTestExecutor, times(1)).execute(any(DeviceJob.class), any(String.class), any(TestPackage.class));		
 	}
 }

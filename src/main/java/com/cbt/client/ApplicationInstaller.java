@@ -5,8 +5,6 @@ import javax.inject.Inject;
 import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
-import com.cbt.client.annotations.PathAndroidToolAdb;
-import com.cbt.client.annotations.WorkspacePath;
 import com.cbt.ws.entity.TestPackage;
 
 public class ApplicationInstaller {
@@ -19,11 +17,10 @@ public class ApplicationInstaller {
 	private String mWorkspacePath;
 
 	@Inject
-	public ApplicationInstaller(CliExecutor cliExecutor, @PathAndroidToolAdb String pathAdb,
-			@WorkspacePath String workspacePath) {
+	public ApplicationInstaller(CliExecutor cliExecutor, Configuration config) {
 		mExecutor = cliExecutor;
-		mPathADB = pathAdb;
-		mWorkspacePath = workspacePath;
+		mPathADB = config.getPathAndroidADB();
+		mWorkspacePath = config.getPathWorkspace();
 	}
 
 	public void installApp(String deviceSerial) throws Exception {
@@ -40,7 +37,7 @@ public class ApplicationInstaller {
 		mLog.info("output:\n" + mExecutor.getOutput());
 	}
 
-	public void installTest(String deviceSerial) throws Exception {
+	public void installTestScript(String deviceSerial) throws Exception {
 		String commandString = String.format(mPathADB + " -s " + deviceSerial + " push " + mWorkspacePath
 				+ "%s /data/local/tmp", mTestPkg.getTestScriptFileName());
 		CommandLine command = CommandLine.parse(commandString);

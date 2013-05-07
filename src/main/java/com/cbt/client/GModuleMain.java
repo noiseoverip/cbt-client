@@ -21,5 +21,6 @@ public class GModuleMain extends AbstractModule {
 		bind(AdbApi.class);
 		bind(CbtWsClientApi.class);
 		bind(Store.class).in(Singleton.class);
+		bind(ClientAuthFilter.class).in(Singleton.class);
 	}	
 }

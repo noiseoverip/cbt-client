@@ -7,29 +7,29 @@ import org.apache.log4j.Logger;
 
 import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
+import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.TestPackage;
 import com.cbt.ws.jooq.enums.DeviceState;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientHandlerException;
 
 /**
- * Runnable responsible for updating particular device state, fetching an executing jobs
+ * Class responsible for updating particular device state, fetching and executing jobs
  * 
  * @author SauliusAlisauskas 2013-03-22 Initial version
  * 
  */
 public class DeviceWorker implements Runnable {
-	private AdbApi mAdbApi;
-	private CbtWsClientApi mWsApi;
-	private static final Logger mLog = Logger.getLogger(DeviceWorker.class);
-	private Device mDevice;
-	private Callback mCallback;
-	private ApplicationInstaller mInstaller;
-	private TestExecutor mTestExecutor;
-
 	public interface Callback {
 		void onDeviceOffline(Device device);
 	}
+	private static final Logger mLog = Logger.getLogger(DeviceWorker.class);
+	private AdbApi mAdbApi;
+	private Callback mCallback;
+	private Device mDevice;
+	private ApplicationInstaller mInstaller;
+	private TestExecutor mTestExecutor;
+	private CbtWsClientApi mWsApi;
 
 	@Inject
 	public DeviceWorker(AdbApi adbApi, CbtWsClientApi wsApi, ApplicationInstaller installer, TestExecutor testExecutor) {
@@ -39,24 +39,9 @@ public class DeviceWorker implements Runnable {
 		mTestExecutor = testExecutor;
 	}
 
-	public void setCallback(Callback callback) {
-		mCallback = callback;
-	}
-
-	public void setDevice(Device device) {
-		mDevice = device;
-	}
-
-	public void sendDeviceUpdate() {
-		try {
-			mWsApi.updatedevice(mDevice);
-		} catch (CbtWsClientException e) {
-			mLog.error("Could not update device:" + mDevice);
-		} catch (ClientHandlerException connectionException) {
-			mLog.error("Connection problem", connectionException);
-		}
-	}
-
+	/**
+	 *  Update device state, check for waiting jobs, execute if any found and send results
+	 */
 	@Override
 	public void run() {
 		mLog.info("Checking device state, " + mDevice);
@@ -86,14 +71,7 @@ public class DeviceWorker implements Runnable {
 			if (null != job) {
 				mLog.info("Found job " + job);
 
-				TestPackage testPackage = null;
-				try {
-					testPackage = fetchTestPackage(job);
-				} catch (CbtWsClientException | IOException e) {
-					mLog.error("Error while checking out files", e);
-					return;
-				}
-
+				TestPackage testPackage = fetchTestPackage(job);				
 				mInstaller.setTestPackage(testPackage);
 
 				// Install target application
@@ -101,27 +79,29 @@ public class DeviceWorker implements Runnable {
 				try {
 					mInstaller.installApp(mDevice.getSerialNumber());
 				} catch (Exception e) {
-					mLog.error("Could not install application on to device", e);
-					return;
+					exitJobRun("Could not install application on to device", e);
 				}
 
 				// Install test
 				mLog.info("Trying to install test JAR file");
 				try {
-					mInstaller.installTest(mDevice.getSerialNumber());
+					mInstaller.installTestScript(mDevice.getSerialNumber());
 				} catch (Exception e) {
-					mLog.error("Could not install test script on to device", e);
-					return;
+					exitJobRun("Could not install test script on to device", e);
 				}
-
-				mTestExecutor.setTestPackage(testPackage);
-				mTestExecutor.setDeviceSerial(mDevice.getSerialNumber());
+				
+				// Set information needed for test execution
+				DeviceJobResult result = null;
+				mLog.info("Executing devicejob:" + job + " on:" + mDevice.getSerialNumber() + " with:" + testPackage);
 				try {
-					mTestExecutor.execute();
+					result = mTestExecutor.execute(job, mDevice.getSerialNumber(), testPackage);
 				} catch (Exception e) {
-					mLog.error("Could not execute test on to device", e);
-					return;
+					exitJobRun("Could not execute test on to device", e);
 				}
+				
+				mLog.info("Publishing results:" + result);				
+				publishTestResult(result);				
+
 			} else {
 				mLog.info("No jobs found");
 			}
@@ -129,8 +109,77 @@ public class DeviceWorker implements Runnable {
 
 	}
 
-	private TestPackage fetchTestPackage(DeviceJob job) throws CbtWsClientException, IOException {
-		TestPackage testPackage = mWsApi.checkoutTestPackage(job.getId());
+	/**
+	 * Set callback implementation
+	 * 
+	 * @param callback
+	 */
+	public void setCallback(Callback callback) {
+		mCallback = callback;
+	}
+
+	/**
+	 * Set device
+	 * 
+	 * @param device
+	 */
+	public void setDevice(Device device) {
+		mDevice = device;
+	}
+	
+	/**
+	 * Handle abnormal exit of device job execution
+	 * 
+	 * @param message
+	 */
+	private void exitJobRun(String message, Throwable e) {
+		mLog.error(message, e);
+		// TODO: send result of abnormal exit to server
+		throw new RuntimeException(message);
+	}
+	
+	/**
+	 * Retrieve test package for specified device job
+	 * @see {@link CbtWsClientApi#checkoutTestPackage(Long)}
+	 * 
+	 * @param job
+	 * @return
+	 * @throws CbtWsClientException
+	 * @throws IOException
+	 */
+	private TestPackage fetchTestPackage(DeviceJob job) {
+		TestPackage testPackage = null;
+		try {
+			testPackage = mWsApi.checkoutTestPackage(job.getId());
+		} catch (CbtWsClientException | IOException e) {
+			exitJobRun("Error while checking out files", e);
+		}
 		return testPackage;
+	}
+	
+	/**
+	 * Helper method for handling publishing of test results
+	 * 
+	 * @param result
+	 */
+	private void publishTestResult(DeviceJobResult result) {
+		try {
+			mWsApi.publishDeviceJobResult(result);
+		} catch (CbtWsClientException e) {
+			exitJobRun("Could not publish job result", e);
+		}
+	}
+	
+	/**
+	 * Helper method for sending device state update
+	 */
+	private void sendDeviceUpdate() {
+		try {
+			mWsApi.updatedevice(mDevice);
+		} catch (CbtWsClientException e) {
+			mLog.error("Could not update device:" + mDevice);
+		} catch (ClientHandlerException connectionException) {
+			mLog.error("Connection problem", connectionException);
+		}
 	}
 }

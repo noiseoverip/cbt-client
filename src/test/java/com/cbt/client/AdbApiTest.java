@@ -7,17 +7,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
-
-import com.cbt.client.AdbApi;
-import com.cbt.client.CliExecutor;
+import org.mockito.Mockito;
 
 public class AdbApiTest {
 	private Logger mLogger = Logger.getLogger(AdbApiTest.class);
-	
-	//private String mPathAdb = "$ANDROID_HOME/platform-tools/adb";
-	private String mPathAdb = "/home/saulius/Documents/dev/adt-bundle-linux-x86_64-20130219/sdk/platform-tools/adb";
-	//private String pathStorage = "/home/saulius/Documents/cbt";
-	
+	private static final String ADB_PATH = "blablabla";
 	/**
 	 * Test {@link DeviceApi#getDevices()}
 	 * 
@@ -26,7 +20,9 @@ public class AdbApiTest {
 	 */
 	@Test
 	public void testGetDevices() throws Exception {
-		AdbApi api = new AdbApi(new CliExecutor(), mPathAdb);
+		CliExecutor cliExecutor = Mockito.mock(CliExecutor.class);
+		Configuration config = Mockito.mock(Configuration.class);
+		AdbApi api = new AdbApi(cliExecutor, config);
 		List<String> devices = api.getDevices();
 		assertNotNull("Returned NULL", devices);
 		assertTrue("Found 0 devices",devices.size() > 0);

@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.cbt.client.annotations.UserId;
 import com.cbt.ws.entity.Device;
+import com.cbt.ws.entity.DeviceType;
 import com.cbt.ws.jooq.enums.DeviceState;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -27,28 +27,39 @@ public class AdbMonitor implements Runnable {
 	private AdbApi mAdbApi;
 	private Callback mCallback;
 	private Store mStore;
-	private Long mUserId;
+	private Configuration mConfig;
+	private DeviceInfoCollector mDeviceInfoCollector;
 
 	private CbtWsClientApi mWsApi;
 
 	@Inject
-	public AdbMonitor(@UserId Long userId, AdbApi adbApi, Store store, CbtWsClientApi wsApi) {
+	public AdbMonitor(Configuration config, AdbApi adbApi, Store store, CbtWsClientApi wsApi, DeviceInfoCollector deviceInfoCollector) {
 		mStore = store;
 		mAdbApi = adbApi;
 		mWsApi = wsApi;
-		mUserId = userId;
+		mConfig = config;
+		mDeviceInfoCollector = deviceInfoCollector;
 	}
 
 	/**
-	 * Run necessary test on device to determine it's properties
+	 * Run necessary test on device to determine it's properties 
 	 * 
 	 * @param device
 	 */
 	private void getDeviceProperties(Device device) {
 		mLog.info("Scaning device:" + device);
 		// TODO: run test on device to determine it's properties
-		device.setDeviceTypeId(1L);
-		device.setDeviceOsId(1L);
+		DeviceType dt = null;
+		try {
+			dt = mDeviceInfoCollector.getDeviceTypeInfo(device.getSerialNumber());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		DeviceType deviceTypeSynced = mWsApi.getDeviceType(dt);
+		device.setDevicetypeId(deviceTypeSynced.getId());
+		device.setDeviceosId(1L);
 	}
 
 	/**
@@ -61,8 +72,8 @@ public class AdbMonitor implements Runnable {
 	private Device registerDevice(String deviceName) throws ClientHandlerException, CbtWsClientException {
 		mLog.info("Registering device:" + deviceName);
 		Device device = new Device();
-		device.setUserId(mUserId);
-		device.setSerialNumber(deviceName);
+		device.setUserId(mConfig.getUserId());
+		device.setSerialnumber(deviceName);
 		device.setState(DeviceState.ONLINE);
 		getDeviceProperties(device);
 		Long deviceId = mWsApi.registerDevice(device);
@@ -86,8 +97,11 @@ public class AdbMonitor implements Runnable {
 
 		for (String deviceSerial : deviceNames) {
 			if (!mStore.contains(deviceSerial)) {
+				// We don't have this device registered in memory, therefore, register in web service
 				try {
+					
 					Device newDevice = registerDevice(deviceSerial);
+					
 					if (null != mCallback) {
 						mCallback.onNewDeviceFound(newDevice);
 					} else {
@@ -97,6 +111,8 @@ public class AdbMonitor implements Runnable {
 					mLog.error("Could not register device:" + deviceSerial, e);
 				} catch (ClientHandlerException connectionException) {
 					mLog.error("Connection problem", connectionException);
+				} catch(Exception e) {
+					mLog.error(e);
 				}
 			}
 		}
