@@ -58,8 +58,8 @@ public class AdbMonitor implements Runnable {
 		}
 		
 		DeviceType deviceTypeSynced = mWsApi.getDeviceType(dt);
-		device.setDevicetypeId(deviceTypeSynced.getId());
-		device.setDeviceosId(1L);
+		device.setDeviceTypeId(deviceTypeSynced.getId());
+		device.setDeviceOsId(1L);
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class AdbMonitor implements Runnable {
 		mLog.info("Registering device:" + deviceName);
 		Device device = new Device();
 		device.setUserId(mConfig.getUserId());
-		device.setSerialnumber(deviceName);
+		device.setSerialNumber(deviceName);
 		device.setState(DeviceState.ONLINE);
 		getDeviceProperties(device);
 		Long deviceId = mWsApi.registerDevice(device);

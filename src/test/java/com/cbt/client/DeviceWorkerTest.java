@@ -39,7 +39,7 @@ public class DeviceWorkerTest {
 	public void before() {
 		mDevice = new Device();
 		mDevice.setState(DeviceState.OFFLINE);
-		mDevice.setSerialnumber(mTestDevices.get(0));
+		mDevice.setSerialNumber(mTestDevices.get(0));
 		mDevice.setId(new Random().nextLong());
 		mAdbApi = mock(AdbApi.class);
 		mWsApi = mock(CbtWsClientApi.class);

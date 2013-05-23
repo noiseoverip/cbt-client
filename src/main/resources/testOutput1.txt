@@ -1,0 +1,53 @@
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=UiAutomatorTestRunner
+INSTRUMENTATION_STATUS: class=com.test.UIPushButtonTest
+INSTRUMENTATION_STATUS: stream=
+com.test.UIPushButtonTest:
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: test=test1
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=UiAutomatorTestRunner
+INSTRUMENTATION_STATUS: class=com.test.UIPushButtonTest
+INSTRUMENTATION_STATUS: stream=
+Error in test1:
+com.android.uiautomator.core.UiObjectNotFoundException: for text= "OneButton"
+	at com.android.uiautomator.core.UiCollection.getChildByText(UiCollection.java:113)
+	at com.android.uiautomator.core.UiScrollable.getChildByText(UiScrollable.java:185)
+	at com.android.uiautomator.core.UiScrollable.getChildByText(UiScrollable.java:166)
+	at com.test.UIPushButtonTest.test1(UIPushButtonTest.java:58)
+	at java.lang.reflect.Method.invokeNative(Native Method)
+	at com.android.uiautomator.testrunner.UiAutomatorTestRunner.start(UiAutomatorTestRunner.java:124)
+	at com.android.uiautomator.testrunner.UiAutomatorTestRunner.run(UiAutomatorTestRunner.java:85)
+	at com.android.commands.uiautomator.RunTestCommand.run(RunTestCommand.java:76)
+	at com.android.commands.uiautomator.Launcher.main(Launcher.java:83)
+	at com.android.internal.os.RuntimeInit.nativeFinishInit(Native Method)
+	at com.android.internal.os.RuntimeInit.main(RuntimeInit.java:235)
+	at dalvik.system.NativeStart.main(Native Method)
+
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=com.android.uiautomator.core.UiObjectNotFoundException: for text= "OneButton"
+	at com.android.uiautomator.core.UiCollection.getChildByText(UiCollection.java:113)
+	at com.android.uiautomator.core.UiScrollable.getChildByText(UiScrollable.java:185)
+	at com.android.uiautomator.core.UiScrollable.getChildByText(UiScrollable.java:166)
+	at com.test.UIPushButtonTest.test1(UIPushButtonTest.java:58)
+	at java.lang.reflect.Method.invokeNative(Native Method)
+	at com.android.uiautomator.testrunner.UiAutomatorTestRunner.start(UiAutomatorTestRunner.java:124)
+	at com.android.uiautomator.testrunner.UiAutomatorTestRunner.run(UiAutomatorTestRunner.java:85)
+	at com.android.commands.uiautomator.RunTestCommand.run(RunTestCommand.java:76)
+	at com.android.commands.uiautomator.Launcher.main(Launcher.java:83)
+	at com.android.internal.os.RuntimeInit.nativeFinishInit(Native Method)
+	at com.android.internal.os.RuntimeInit.main(RuntimeInit.java:235)
+	at dalvik.system.NativeStart.main(Native Method)
+
+INSTRUMENTATION_STATUS: test=test1
+INSTRUMENTATION_STATUS_CODE: -1
+INSTRUMENTATION_STATUS: stream=
+Test results for UiAutomatorTestRunner=.E
+Time: 33.927
+
+FAILURES!!!
+Tests run: 1,  Failures: 3,  Errors: 100
+
+
+INSTRUMENTATION_STATUS_CODE: -1
