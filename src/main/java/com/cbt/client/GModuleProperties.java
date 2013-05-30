@@ -1,8 +1,10 @@
 package com.cbt.client;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import javax.inject.Singleton;
@@ -19,20 +21,30 @@ import com.google.inject.name.Names;
  * 
  */
 public class GModuleProperties extends AbstractModule {
-	
+
 	private final Logger mLogger = Logger.getLogger(GModuleProperties.class);
+	private static final String configFilePath = "/client.properties";
 	
 	@Override
 	protected void configure() {
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileReader(this.getClass().getResource("/client.properties").getPath()));
+			// Try local file
+			InputStream input = Configuration.class.getResourceAsStream(configFilePath);
+			if (null == input) {
+				// Try absolute path
+				mLogger.info("Trying:" + new File(configFilePath).getAbsolutePath());
+				input = new FileInputStream(new File(configFilePath).getAbsolutePath());
+			}
+			if (null != input) {
+				properties.load(input);
+			}
 			Names.bindProperties(binder(), properties);
 		} catch (FileNotFoundException e) {
 			mLogger.error("The configuration file Test.properties can not be found", e);
 		} catch (IOException e) {
 			mLogger.error("I/O Exception during loading configuration", e);
-		}		
+		}
 		bind(Configuration.class).in(Singleton.class);
 	}
 }
