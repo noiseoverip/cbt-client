@@ -1,26 +1,23 @@
 *.class
 
-
-
-# Eclipse project 
-#
-
+# Eclipse project
 .classpath
-
 .project
-
 .settings
-
 target
 
-
-
-# Package Files 
-
+# Package Files
 *.jar
-
 *.war
-
 *.ear
-
 test-output
+
+# Intellij
+/.idea
+/*.iml
+
+# Sublime
+/sublime.project.sublime-*
+
+# Mac
+.DS_Store

@@ -78,6 +78,6 @@ public class Configuration {
 
 	@Inject
 	public void setUserPassword(@Named("password") String userPassword) {
-		this.userPassword = Utils.Md5(userPassword);
+		this.userPassword = Utils.md5(userPassword);
 	}
 }
