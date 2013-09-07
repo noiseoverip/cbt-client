@@ -1,51 +1,48 @@
 package com.cbt.client;
 
-import java.io.File;
-import java.io.FileInputStream;
+import static org.mockito.Mockito.mock;
+
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 
-import junit.framework.Assert;
-
-import org.apache.log4j.Logger;
-import org.junit.Test;
-import static org.mockito.Mockito.*;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.exceptions.CbtTestResultParseExeception;
+import com.cbt.ws.jooq.enums.DeviceJobResultState;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 
 /**
- * Standalone test for {@link TestExecutor}
+ * UT for {@link TestExecutor}
  * 
- * @author SauliusAlisauskas
- *
+ * @author SauliusAlisauskas 2013-03-22
+ * 
  */
 public class TestExecutionTest {
-	
-	private final Logger mLogger = Logger.getLogger(TestExecutionTest.class);
-	
+
+	// private final Logger mLogger = Logger.getLogger(TestExecutionTest.class);
+
 	/**
 	 * Test parsing of result with failure
 	 * 
 	 * @throws IOException
 	 * @throws CbtTestResultParseExeception
 	 */
-	@Test 
+	@Test
 	public void testParsetOutputFailed() throws IOException, CbtTestResultParseExeception {
 		DeviceJobResult testResult = new DeviceJobResult();
-		String output = getDummyOutput("testOutput1.txt");
+		String output = Resources.toString(Resources.getResource("adbOutputTestFailed.txt"), Charsets.UTF_8);
 		Configuration config = mock(Configuration.class);
 		TestExecutor executor = new TestExecutor(null, config);
 		executor.parseTestOutput(output, testResult);
-		Assert.assertEquals((Integer)1, testResult.getTestsRun());
-		Assert.assertEquals((Integer)3, testResult.getTestsFailed());
-		Assert.assertEquals((Integer)100, testResult.getTestsErrors());
-		Assert.assertEquals(DeviceJobResult.State.FAILED, testResult.getState());
-		
+		Assert.assertEquals((Integer) 1, testResult.getTestsRun());
+		Assert.assertEquals((Integer) 3, testResult.getTestsFailed());
+		Assert.assertEquals((Integer) 100, testResult.getTestsErrors());
+		Assert.assertEquals(DeviceJobResultState.FAILED, testResult.getState());
+
 	}
-	
+
 	/**
 	 * Test parsing of successful results from running single test
 	 * 
@@ -54,9 +51,9 @@ public class TestExecutionTest {
 	 */
 	@Test
 	public void testParseOutputSuccess() throws IOException, CbtTestResultParseExeception {
-		testParseOutputSuccess(getDummyOutput("testOutputSuccess.txt"), 1);
+		testParseOutputSuccess(Resources.toString(Resources.getResource("adbOutputTestSuccess.txt"), Charsets.UTF_8), 1);
 	}
-	
+
 	/**
 	 * Test parsing of successful results from running multiple tests
 	 * 
@@ -65,28 +62,25 @@ public class TestExecutionTest {
 	 */
 	@Test
 	public void testParseOutputSuccessMultiple() throws IOException, CbtTestResultParseExeception {
-		testParseOutputSuccess(getDummyOutput("testOutputSuccessMultipleFiles.txt"), 4);
+		final int numberOfTests = 4;
+		testParseOutputSuccess(
+				Resources.toString(Resources.getResource("adbOutputTestSuccessMultipleTests.txt"), Charsets.UTF_8),
+				numberOfTests);
 	}
-	
+
+	/**
+	 * Helper method for testing parsing of successful test result and variable number of test runs
+	 * 
+	 * @param testOutput
+	 * @param testsRun
+	 * @throws CbtTestResultParseExeception
+	 */
 	private void testParseOutputSuccess(String testOutput, int testsRun) throws CbtTestResultParseExeception {
-		DeviceJobResult testResult = new DeviceJobResult();
 		Configuration config = mock(Configuration.class);
+		DeviceJobResult testResult = new DeviceJobResult();
 		TestExecutor executor = new TestExecutor(null, config);
 		executor.parseTestOutput(testOutput, testResult);
-		Assert.assertEquals((Integer)testsRun, testResult.getTestsRun());
-		Assert.assertEquals(DeviceJobResult.State.PASSED, testResult.getState());
-	}
-	
-	private String getDummyOutput(String fileName) throws IOException {
-		String path = this.getClass().getClassLoader().getResource(fileName).getPath();
-		FileInputStream stream = new FileInputStream(new File(path));
-		try {
-			FileChannel fc = stream.getChannel();
-			MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-			/* Instead of using default, pass in a decoder. */
-			return Charset.defaultCharset().decode(bb).toString();
-		} finally {
-			stream.close();
-		}
+		Assert.assertEquals((Integer) testsRun, testResult.getTestsRun());
+		Assert.assertEquals(DeviceJobResultState.PASSED, testResult.getState());
 	}
 }

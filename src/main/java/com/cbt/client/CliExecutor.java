@@ -11,6 +11,12 @@ import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.ShutdownHookProcessDestroyer;
 import org.apache.log4j.Logger;
 
+/**
+ * Helper class for executing CLI commands
+ * 
+ * @author SauliusAlisuaskas 2013-03-22 Initial version
+ *
+ */
 public class CliExecutor {
 
 	private static final Logger mLog = Logger.getLogger(CliExecutor.class);

@@ -15,7 +15,7 @@ import com.cbt.ws.entity.Device;
 import com.google.inject.Injector;
 
 /**
- * Main CBT client class
+ * Main CBT client class responsible for starting thread pools and workers
  * 
  * @author SauliusAlisauskas 2013-03-19 Initial version
  * 
@@ -25,7 +25,7 @@ public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
 	private ScheduledExecutorService mDeviceMonitorExecutor;
 	private Map<String, ScheduledFuture<?>> mDeviceWorkers = new HashMap<String, ScheduledFuture<?>>();
 	private Injector mInjector;
-	private final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
+	private final Logger mLog = Logger.getLogger(AndroidApplicationInstaller.class);
 	private Store mStore;
 	private Configuration mConfig;
 	private CbtWsClientApi mCbtClientApi;

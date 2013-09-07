@@ -1,17 +1,19 @@
 package com.cbt.client;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import junit.framework.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
@@ -20,7 +22,7 @@ import com.cbt.ws.jooq.enums.DeviceJobStatus;
 import com.cbt.ws.jooq.enums.DeviceState;
 
 /**
- * Unit test for {@link AdbMonitor}
+ * UT for {@link DeviceWorker}
  * 
  * @author SauliusAlisauskas 2013-03-18 Initial version
  * 
@@ -31,11 +33,11 @@ public class DeviceWorkerTest {
 	private Device mDevice;
 	private AdbApi mAdbApi;
 	private CbtWsClientApi mWsApi;
-	private ApplicationInstaller mInstaller;
+	private AndroidApplicationInstaller mInstaller;
 	private TestExecutor mTestExecutor;
 	private static final List<String> mTestDevices = Arrays.asList("myDevice1", "myDevice2");
 
-	@Before
+	@BeforeMethod
 	public void before() {
 		mDevice = new Device();
 		mDevice.setState(DeviceState.OFFLINE);
@@ -43,7 +45,7 @@ public class DeviceWorkerTest {
 		mDevice.setId(new Random().nextLong());
 		mAdbApi = mock(AdbApi.class);
 		mWsApi = mock(CbtWsClientApi.class);
-		mInstaller = mock(ApplicationInstaller.class);
+		mInstaller = mock(AndroidApplicationInstaller.class);
 		mTestExecutor = mock(TestExecutor.class);
 		mUnit = new DeviceWorker(mAdbApi, mWsApi, mInstaller, mTestExecutor);
 		mUnit.setDevice(mDevice);

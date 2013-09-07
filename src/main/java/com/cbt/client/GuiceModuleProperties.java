@@ -20,9 +20,9 @@ import com.google.inject.name.Names;
  * @author SauliusAlisauskas 2013-03-18 Initial version
  * 
  */
-public class GModuleProperties extends AbstractModule {
+public class GuiceModuleProperties extends AbstractModule {
 
-	private final Logger mLogger = Logger.getLogger(GModuleProperties.class);
+	private final Logger mLogger = Logger.getLogger(GuiceModuleProperties.class);
 	private static final String configFilePath = "/client.properties";
 	
 	@Override

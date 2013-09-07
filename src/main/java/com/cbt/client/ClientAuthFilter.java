@@ -11,7 +11,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.filter.ClientFilter;
 
 /**
- * Jersey Client filter for handling authentication
+ * Jersey Client filter for handling authentication towards CBT web service
  * 
  * @author SauliusALisauskas
  *

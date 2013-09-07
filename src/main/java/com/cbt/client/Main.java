@@ -5,6 +5,12 @@ import org.apache.log4j.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+/**
+ * Main CBT client class
+ * 
+ * @author SauliusAlisauskas 2013-03-22 Initial version
+ *
+ */
 public class Main {
 	
 	private static final Logger mLog = Logger.getLogger(Main.class);
@@ -13,7 +19,7 @@ public class Main {
 		
 		mLog.info("Starting application");
 		
-		Injector injector = Guice.createInjector(new GModuleMain(), new GModuleProperties());
+		Injector injector = Guice.createInjector(new GuiceModuleMain(), new GuiceModuleProperties());
 	    CbtClient client = injector.getInstance(CbtClient.class);
 	    client.start();
 	    

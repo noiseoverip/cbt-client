@@ -7,9 +7,15 @@ import org.apache.log4j.Logger;
 
 import com.cbt.ws.entity.TestPackage;
 
-public class ApplicationInstaller {
+/**
+ * Helper class for installing files and application on to Android device
+ * 
+ * @author SauliusAlisauskas
+ *
+ */
+public class AndroidApplicationInstaller {
 
-	private static final Logger mLog = Logger.getLogger(ApplicationInstaller.class);
+	private static final Logger mLog = Logger.getLogger(AndroidApplicationInstaller.class);
 
 	private CliExecutor mExecutor;
 	private String mPathADB;
@@ -17,7 +23,7 @@ public class ApplicationInstaller {
 	private String mWorkspacePath;
 
 	@Inject
-	public ApplicationInstaller(CliExecutor cliExecutor, Configuration config) {
+	public AndroidApplicationInstaller(CliExecutor cliExecutor, Configuration config) {
 		mExecutor = cliExecutor;
 		mPathADB = config.getPathAndroidADB();
 		mWorkspacePath = config.getPathWorkspace();

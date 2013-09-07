@@ -12,7 +12,7 @@ import com.cbt.ws.entity.DeviceType;
 /**
  * Device information collector class
  * 
- * @author Saulius Alisauskas
+ * @author SauliusAlisauskas 2013-03-22 Initial version
  *
  */
 public class DeviceInfoCollector {
@@ -27,7 +27,14 @@ public class DeviceInfoCollector {
 		mExecutor = cliExecutor;
 		mPathADB = config.getPathAndroidADB();		
 	}
-
+	
+	/**
+	 * Query device information through ADB
+	 * 
+	 * @param deviceSerial
+	 * @return
+	 * @throws Exception
+	 */
 	public DeviceType getDeviceTypeInfo(String deviceSerial) throws Exception {
 		String commandString = mPathADB +  " -s " + deviceSerial + " shell cat /system/build.prop";
 		CommandLine command = CommandLine.parse(commandString);

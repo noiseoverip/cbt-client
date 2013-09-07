@@ -10,12 +10,12 @@ import com.google.inject.AbstractModule;
  * @author SauliusAlisauskas 2013-03-18 Initial version
  *
  */
-public class GModuleMain extends AbstractModule {
+public class GuiceModuleMain extends AbstractModule {
 
 	@Override
 	protected void configure() {
 		bind(CbtClient.class);
-		bind(ApplicationInstaller.class);
+		bind(AndroidApplicationInstaller.class);
 		bind(CliExecutor.class);
 		bind(TestExecutor.class);
 		bind(AdbApi.class);

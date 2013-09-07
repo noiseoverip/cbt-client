@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 
@@ -21,11 +20,12 @@ import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 
 /**
- * Cbt Web service client API
+ * CBT Web service client API
  * 
  * @author SauliusAlisauskas 2013-03-12 Initial version
  * 
@@ -36,7 +36,7 @@ public class CbtWsClientApi {
 	private Logger mLogger = Logger.getLogger(CbtWsClientApi.class);
 	private String mWorkspace;
 	private String mWsUrl;
-	boolean trace;
+	boolean mTrace;
 
 	@Inject
 	public CbtWsClientApi(Configuration config, ClientAuthFilter authFilter) {
@@ -44,7 +44,7 @@ public class CbtWsClientApi {
 		mWorkspace = config.getPathWorkspace();
 		mAuthFilter = authFilter;
 		mLogger.debug("Cbt client using URL:" + mWsUrl + " workspace:" + mWorkspace);
-		trace = config.isTraceRestClient();
+		mTrace = config.isTraceRestClient();
 	}
 
 	/**
@@ -61,8 +61,12 @@ public class CbtWsClientApi {
 		// Get Test package information
 		TestPackage testPackage = null;
 		try {
-			testPackage = getWebRes().path("checkout/testpackage").queryParam("devicejob_id", deviceJobId.toString())
+			
+			testPackage = getWebRes()
+					.path("testpackage")
+					.queryParam("devicejobId", deviceJobId.toString())
 					.get(TestPackage.class);
+			
 		} catch (Exception e) {
 			throw new CbtWsClientException("Could not fetch test package information", e);
 		}
@@ -70,11 +74,13 @@ public class CbtWsClientApi {
 		mLogger.debug("Received info:" + testPackage);
 
 		// Fetch required files
-		ClientResponse response = getWebRes().path("checkout/testpackage.zip")
-				.queryParam("devicejob_id", deviceJobId.toString()).get(ClientResponse.class);
+		ClientResponse response = getWebRes()
+				.path("testpackage.zip")
+				.queryParam("devicejobId", deviceJobId.toString())
+				.get(ClientResponse.class);
 
 		String tmpZipFileName;
-		if (ClientResponse.Status.OK.getStatusCode() == response.getStatus()) {
+		if (Status.OK.getStatusCode() == response.getStatus()) {
 			File downloadedFile = response.getEntity(File.class);
 			// Generate temporary file
 			tmpZipFileName = mWorkspace + String.valueOf(new Random().nextLong());
@@ -97,19 +103,23 @@ public class CbtWsClientApi {
 	}
 
 	/**
-	 * Fetch device type information
+	 * Send device type info
 	 * 
 	 * @param deviceType
-	 * @return
+	 * @return unique device type id based on submitted device info
 	 */
-	public DeviceType getDeviceType(DeviceType deviceType) {
-		WebResource webResource = getWebRes();
-		ClientResponse response = webResource.path("device/type").accept(MediaType.APPLICATION_JSON)
-				.type(MediaType.APPLICATION_JSON_TYPE).put(ClientResponse.class, deviceType);
+	public DeviceType syncDeviceType(DeviceType deviceType) {
+		
+		ClientResponse response = getWebRes()
+				.path("device")
+				.path("type")
+				.accept(MediaType.APPLICATION_JSON)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.post(ClientResponse.class, deviceType);
 
 		DeviceType deviceTypeSynced = null;
 		mLogger.debug("Received response:" + response);
-		if (response.getStatus() == ClientResponse.Status.OK.getStatusCode()) {
+		if (Status.OK.getStatusCode() == response.getStatus()) {
 			deviceTypeSynced = response.getEntity(DeviceType.class);
 		}
 		return deviceTypeSynced;
@@ -122,16 +132,17 @@ public class CbtWsClientApi {
 	 * @return {@link DeviceJob} if available, null if no jobs found
 	 */
 	public DeviceJob getWaitingJob(Device device) {
-		WebResource webResource = getWebRes();
-
-		ClientResponse response = webResource.path("devicejob/waiting")
-				.queryParam("deviceId", device.getId().toString()).accept(MediaType.APPLICATION_JSON)
+		
+		ClientResponse response = getWebRes().path("devicejob")
+				.queryParam("deviceId", device.getId().toString())
+				.accept(MediaType.APPLICATION_JSON)
 				.type(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
 		DeviceJob job = null;
 		mLogger.debug("Received response:" + response);
-		if (response.getStatus() == ClientResponse.Status.OK.getStatusCode()) {
-			job = response.getEntity(DeviceJob.class);
+		if (Status.OK.getStatusCode() == response.getStatus()) {
+			// Currently we care only about oldest job in the list
+			job = response.getEntity(DeviceJob[].class)[0];
 		}
 		return job;
 	}
@@ -143,26 +154,34 @@ public class CbtWsClientApi {
 	 * @throws CbtWsClientException
 	 */
 	public DeviceJobResult publishDeviceJobResult(DeviceJobResult result) throws CbtWsClientException {
-		mLogger.debug("Sending result");
-		WebResource webResource = getWebRes();
-		DeviceJobResult response = webResource.path("devicejob").path(result.getDevicejobId().toString())
-				.path("result").type(MediaType.APPLICATION_JSON_TYPE).put(DeviceJobResult.class, result);
+		
+		DeviceJobResult response = getWebRes().path("devicejob")
+				.path(result.getDevicejobId().toString())
+				.path("result")
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.put(DeviceJobResult.class, result);
+		
 		if (response.getId() < 0) {
 			throw new CbtWsClientException("Failed to publish device job result");
 		}
 		return result;
 	}
-
+	
+	//TODO: create/use required entities
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> getUserByName(String name) {
 		mLogger.debug("Getting user statistics");
-		WebResource webResource = getWebRes();
-		ClientResponse response = webResource.path("user").queryParam("name", name)
-				.type(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
-		if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+		
+		ClientResponse response = getWebRes()
+				.path("user")
+				.queryParam("name", name)
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.get(ClientResponse.class);
+		
+		if (Status.OK.getStatusCode() == response.getStatus()) {
 			return response.getEntity(Map.class);
 		}
 		return null;
-
 	}
 
 	/**
@@ -174,22 +193,25 @@ public class CbtWsClientApi {
 	 */
 	public Long registerDevice(Device device) throws CbtWsClientException, ClientHandlerException {
 		mLogger.debug("Registering device:" + device);
-		WebResource webResource = getWebRes();
-		ClientResponse response = webResource.path("device").type(MediaType.APPLICATION_JSON_TYPE)
-				.accept(MediaType.TEXT_HTML).put(ClientResponse.class, device);
-		mLogger.debug(response);
-		int result = response.getStatus();
-		if (result == ClientResponse.Status.OK.getStatusCode()) {
-			mLogger.debug("Device register OK");
-			return Long.valueOf(response.getEntity(String.class));
-		} else if (result == ClientResponse.Status.CONFLICT.getStatusCode()) {
-			Device registeredDevice = response.getEntity(Device.class);
-			mLogger.warn("Device was already registered:" + registeredDevice);
-			return registeredDevice.getId();
-		} else {
-			mLogger.debug("Device register failed");
-			throw new CbtWsClientException("Failed to register new device");
-		}
+		
+		ClientResponse response = getWebRes()
+				.path("device")
+				.type(MediaType.APPLICATION_JSON_TYPE)
+				.accept(MediaType.TEXT_HTML)
+				.put(ClientResponse.class, device);
+		
+		switch (Status.fromStatusCode(response.getStatus())) {
+			case OK:
+				mLogger.debug("Device register OK");
+				return Long.valueOf(response.getEntity(String.class));
+			case CONFLICT:
+				Device registeredDevice = response.getEntity(Device.class);
+				mLogger.warn("Device was already registered:" + registeredDevice);
+				return registeredDevice.getId();
+			default:
+				mLogger.debug("Device register failed");
+				throw new CbtWsClientException("Failed to register new device");
+		}		
 	}
 
 	/**
@@ -200,10 +222,14 @@ public class CbtWsClientApi {
 	 */
 	public void updatedevice(Device device) throws CbtWsClientException, ClientHandlerException {
 		mLogger.debug("Updating device:" + device);
-		WebResource webResource = getWebRes();
-		ClientResponse response = webResource.path("device/" + device.getId()).type(MediaType.APPLICATION_JSON_TYPE)
+		
+		ClientResponse response = getWebRes()
+				.path("device")
+				.path(device.getId().toString())
+				.type(MediaType.APPLICATION_JSON_TYPE)
 				.post(ClientResponse.class, device);
-		if (response.getStatus() != ClientResponse.Status.NO_CONTENT.getStatusCode()) {
+		
+		if (Status.OK.getStatusCode() == response.getStatus()) {
 			throw new CbtWsClientException("Failed to update device, response:" + response);
 		}
 	}
@@ -218,15 +244,20 @@ public class CbtWsClientApi {
 			mClient = Client.create();
 			mClient.setConnectTimeout(5000);
 			mClient.setReadTimeout(5000);
-			if (trace) {
+			if (mTrace) {
 				mClient.addFilter(new LoggingFilter(System.out));
 			}
 			mClient.addFilter(mAuthFilter);
 		}
 		return mClient;
 	}
-
+	
+	/**
+	 * Helper method to construct request resource 
+	 * 
+	 * @return
+	 */
 	private WebResource getWebRes() {
-		return getClient().resource(mWsUrl);
+		return getClient().resource(mWsUrl).path("rip");
 	}
 }

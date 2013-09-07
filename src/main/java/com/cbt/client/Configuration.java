@@ -5,6 +5,12 @@ import javax.inject.Named;
 import com.cbt.ws.utils.Utils;
 import com.google.inject.Inject;
 
+/**
+ * Cbt client configuration class
+ * 
+ * @author SauliusAlisauskas 2013-03-22 Initial version
+ *
+ */
 public class Configuration {
 	private String pathAndroidADB;
 	private String pathWorkspace;

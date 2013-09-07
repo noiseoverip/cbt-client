@@ -1,59 +1,67 @@
 package com.cbt.client;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import com.cbt.client.AdbMonitor.Callback;
 import com.cbt.ws.entity.Device;
+import com.cbt.ws.entity.DeviceType;
 
 /**
- * Unit test for {@link AdbMonitor}
+ * UT for {@link AdbMonitor}
  * 
  * @author SauliusAlisauskas 2013-03-18 Initial version
- *
+ * 
  */
 public class AdbMonitorTest {
-	
-	private AdbMonitor mUnit;
-	private static final List<String> mTestDevices = Arrays.asList("myDevice1", "myDevice2");
-	
+
+	private static final List<String> DUMMY_DEVICE_NAME = Arrays.asList("myDevice1", "myDevice2");
+
 	@Test
 	public void test() throws Exception {
-//		// Initial setup
-//		final Long userId = 1L;
-//		final AdbApi adbApi = mock(AdbApi.class);
-//		final Store store = new Store();
-//		CbtWsClientApi wsApi = mock(CbtWsClientApi.class);
-//		mUnit = new AdbMonitor(userId, adbApi, store, wsApi);
-//		mUnit.setCallback(new Callback() {			
-//			@Override
-//			public void onNewDeviceFound(Device device) {
-//				store.addDevice(device);				
-//			}
-//		});
-//		
-//		// Test that new device get registered
-//		when(adbApi.getDevices()).thenReturn(new ArrayList<String>(mTestDevices));
-//		when(wsApi.registerDevice(any(Device.class))).thenReturn(Long.valueOf(new Random().nextInt(100)));
-//		mUnit.run();		
-//		verify(adbApi).getDevices();
-//		verify(wsApi, times(mTestDevices.size())).registerDevice(any(Device.class));		
-//		
-//		// Test that if new device is added it will get registered and already existing ones will not invoke registration process
-//		List<String> devices = new ArrayList<String>(mTestDevices);
-//		devices.add("myDevice3");
-//		when(adbApi.getDevices()).thenReturn(devices);		
-//		mUnit.run();
-//		verify(wsApi, times(mTestDevices.size() + 1)).registerDevice(any(Device.class));
+
+		final Configuration config = mock(Configuration.class);
+
+		final AdbApi adbApi = mock(AdbApi.class);
+		when(adbApi.getDevices()).thenReturn(DUMMY_DEVICE_NAME);
+
+		final Store store = new Store();
+
+		final DeviceInfoCollector deviceInfoCollector = mock(DeviceInfoCollector.class);
+		DeviceType deviceType = new DeviceType("dummymanufacture", "dummymodel");
+		deviceType.setId(1L);
+		when(deviceInfoCollector.getDeviceTypeInfo(any(String.class))).thenReturn(deviceType);
+
+		final CbtWsClientApi wsApi = mock(CbtWsClientApi.class);
+		when(wsApi.registerDevice(any(Device.class))).thenReturn(Long.valueOf(new Random().nextInt(100)));
+		when(wsApi.syncDeviceType(deviceType)).thenReturn(deviceType);
+
+		AdbMonitor monitor = new AdbMonitor(config, adbApi, store, wsApi, deviceInfoCollector);
+		monitor.setCallback(new AdbMonitor.Callback() {
+
+			@Override
+			public void onNewDeviceFound(Device device) {
+				store.addDevice(device);
+			}
+		});
+
+		// Run and verify that call to scan for new devices was sent to adb and that expected number of device
+		// registration were sent
+		monitor.run();
+		verify(adbApi).getDevices();
+		verify(wsApi, times(DUMMY_DEVICE_NAME.size())).registerDevice(any(Device.class));
+
+		// Test that if new device is added it will get registered and already existing ones will not invoke
+		// registration process
+		List<String> devices = new ArrayList<String>(DUMMY_DEVICE_NAME);
+		devices.add("myDevice3");
+		when(adbApi.getDevices()).thenReturn(devices);
+		monitor.run();
+		verify(wsApi, times(DUMMY_DEVICE_NAME.size() + 1)).registerDevice(any(Device.class));
 	}
 }

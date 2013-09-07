@@ -35,29 +35,9 @@ public class AdbApi {
 		} else {
 			mLog.info("Success");
 		}
-	}
+	}	
 	
-	// TODO: parse version properly
-	/**
-	 * Get adb version
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public String getAdbVersion() throws Exception {
-		String commandString = String.format(mPathAdb + " version");
-		CommandLine command = CommandLine.parse(commandString);
-		int exitValue = mExecutor.execute(command);
-		mLog.info("Exit value:" + exitValue);
-		if (mExecutor.isFailure(exitValue)) {
-			throw new Exception("Failed");
-		} else {
-			mLog.info("Success");
-		}
-		mLog.info("output:\n" + mExecutor.getOutput());
-		return mExecutor.getOutput();
-	}
-
+	//TODO: change to regexp ?
 	/**
 	 * Get list of device id's
 	 * 

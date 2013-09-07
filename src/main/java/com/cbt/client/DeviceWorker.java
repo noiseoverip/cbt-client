@@ -14,7 +14,8 @@ import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientHandlerException;
 
 /**
- * Class responsible for updating particular device state, fetching and executing jobs
+ * Class responsible for updating particular device state, fetching and executing jobs. It support one device only,
+ * therefore, separate instances must be run for each device
  * 
  * @author SauliusAlisauskas 2013-03-22 Initial version
  * 
@@ -23,16 +24,17 @@ public class DeviceWorker implements Runnable {
 	public interface Callback {
 		void onDeviceOffline(Device device);
 	}
-	private static final Logger mLog = Logger.getLogger(DeviceWorker.class);
+
+	private static final Logger mLogger = Logger.getLogger(DeviceWorker.class);
 	private AdbApi mAdbApi;
 	private Callback mCallback;
 	private Device mDevice;
-	private ApplicationInstaller mInstaller;
+	private AndroidApplicationInstaller mInstaller;
 	private TestExecutor mTestExecutor;
 	private CbtWsClientApi mWsApi;
 
 	@Inject
-	public DeviceWorker(AdbApi adbApi, CbtWsClientApi wsApi, ApplicationInstaller installer, TestExecutor testExecutor) {
+	public DeviceWorker(AdbApi adbApi, CbtWsClientApi wsApi, AndroidApplicationInstaller installer, TestExecutor testExecutor) {
 		mAdbApi = adbApi;
 		mWsApi = wsApi;
 		mInstaller = installer;
@@ -40,22 +42,22 @@ public class DeviceWorker implements Runnable {
 	}
 
 	/**
-	 *  Update device state, check for waiting jobs, execute if any found and send results
+	 * Update device state, check for waiting jobs, execute if any found and send results
 	 */
 	@Override
 	public void run() {
-		mLog.info("Checking device state, " + mDevice);
+		mLogger.info("Checking device state, " + mDevice);
 		// Check device status
 		List<String> deviceNames = null;
 		try {
 			deviceNames = mAdbApi.getDevices();
 		} catch (Exception e) {
-			mLog.error("Could not find any device attached");
+			mLogger.error("Could not find any device attached");
 		} finally {
 			if (null != deviceNames && deviceNames.indexOf(mDevice.getSerialNumber()) > -1) {
 				mDevice.setState(DeviceState.ONLINE);
 			} else {
-				mLog.warn("Device wen offline, " + mDevice);
+				mLogger.warn("Device wen offline, " + mDevice);
 				mDevice.setState(DeviceState.OFFLINE);
 				if (null != mCallback) {
 					mCallback.onDeviceOffline(mDevice);
@@ -66,16 +68,16 @@ public class DeviceWorker implements Runnable {
 
 		// Check for available jobs
 		if (mDevice.getState().equals(DeviceState.ONLINE)) {
-			mLog.info("Checking jobs for " + mDevice);
+			mLogger.info("Checking jobs for " + mDevice);
 			DeviceJob job = mWsApi.getWaitingJob(mDevice);
 			if (null != job) {
-				mLog.info("Found job " + job);
+				mLogger.info("Found job " + job);
 
-				TestPackage testPackage = fetchTestPackage(job);				
+				TestPackage testPackage = fetchTestPackage(job);
 				mInstaller.setTestPackage(testPackage);
 
 				// Install target application
-				mLog.info("Trying to install application on to device");
+				mLogger.info("Trying to install application on to device");
 				try {
 					mInstaller.installApp(mDevice.getSerialNumber());
 				} catch (Exception e) {
@@ -83,27 +85,27 @@ public class DeviceWorker implements Runnable {
 				}
 
 				// Install test
-				mLog.info("Trying to install test JAR file");
+				mLogger.info("Trying to install test JAR file");
 				try {
 					mInstaller.installTestScript(mDevice.getSerialNumber());
 				} catch (Exception e) {
 					exitJobRun("Could not install test script on to device", e);
 				}
-				
+
 				// Set information needed for test execution
 				DeviceJobResult result = null;
-				mLog.info("Executing devicejob:" + job + " on:" + mDevice.getSerialNumber() + " with:" + testPackage);
+				mLogger.info("Executing devicejob:" + job + " on:" + mDevice.getSerialNumber() + " with:" + testPackage);
 				try {
 					result = mTestExecutor.execute(job, mDevice.getSerialNumber(), testPackage);
 				} catch (Exception e) {
 					exitJobRun("Could not execute test on to device", e);
 				}
-				
-				mLog.info("Publishing results:" + result);				
-				publishTestResult(result);				
+
+				mLogger.info("Publishing results:" + result);
+				publishTestResult(result);
 
 			} else {
-				mLog.info("No jobs found");
+				mLogger.info("No jobs found");
 			}
 		}
 
@@ -126,20 +128,21 @@ public class DeviceWorker implements Runnable {
 	public void setDevice(Device device) {
 		mDevice = device;
 	}
-	
+
 	/**
 	 * Handle abnormal exit of device job execution
 	 * 
 	 * @param message
 	 */
 	private void exitJobRun(String message, Throwable e) {
-		mLog.error(message, e);
+		mLogger.error(message, e);
 		// TODO: send result of abnormal exit to server
 		throw new RuntimeException(message);
 	}
-	
+
 	/**
 	 * Retrieve test package for specified device job
+	 * 
 	 * @see {@link CbtWsClientApi#checkoutTestPackage(Long)}
 	 * 
 	 * @param job
@@ -156,7 +159,7 @@ public class DeviceWorker implements Runnable {
 		}
 		return testPackage;
 	}
-	
+
 	/**
 	 * Helper method for handling publishing of test results
 	 * 
@@ -169,7 +172,7 @@ public class DeviceWorker implements Runnable {
 			exitJobRun("Could not publish job result", e);
 		}
 	}
-	
+
 	/**
 	 * Helper method for sending device state update
 	 */
@@ -177,9 +180,9 @@ public class DeviceWorker implements Runnable {
 		try {
 			mWsApi.updatedevice(mDevice);
 		} catch (CbtWsClientException e) {
-			mLog.error("Could not update device:" + mDevice);
+			mLogger.error("Could not update device:" + mDevice);
 		} catch (ClientHandlerException connectionException) {
-			mLog.error("Connection problem", connectionException);
+			mLogger.error("Connection problem", connectionException);
 		}
 	}
 }

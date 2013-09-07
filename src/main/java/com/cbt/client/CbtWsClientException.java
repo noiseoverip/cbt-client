@@ -1,7 +1,7 @@
 package com.cbt.client;
 
 /**
- * Base exception class for Cbt client exceptions
+ * Base exception class for CBT client exceptions
  * 
  * @author SauliusAlisauskas 2013-03-18 Initial version
  *

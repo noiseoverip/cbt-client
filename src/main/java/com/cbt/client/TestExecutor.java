@@ -13,12 +13,13 @@ import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.DeviceJobResult.JunitTestSummary;
 import com.cbt.ws.entity.TestPackage;
 import com.cbt.ws.exceptions.CbtTestResultParseExeception;
+import com.cbt.ws.jooq.enums.DeviceJobResultState;
 import com.google.common.base.Joiner;
 
 /**
  * Class responsible for executing tests through ADB and parsing results
  * 
- * @author SauliusAlisauskas
+ * @author SauliusAlisauskas 2013-03-22 Initial version
  *
  */
 public class TestExecutor {
@@ -80,11 +81,11 @@ public class TestExecutor {
 		if (successMatcher.find()) {
 			mLogger.debug("Tests PASSED for");
 			testResult.setTestsRun(Integer.valueOf(successMatcher.group(1)));
-			testResult.setState(DeviceJobResult.State.PASSED);
+			testResult.setState(DeviceJobResultState.PASSED);
 			testResult.setTestsErrors(0);
 			testResult.setTestsFailed(0);
 		} else {
-			testResult.setState(DeviceJobResult.State.FAILED);
+			testResult.setState(DeviceJobResultState.FAILED);
 			mLogger.debug("Tests FAILED");
 			String[] lines = output.split("\n");
 			for (String line : lines) {

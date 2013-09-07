@@ -18,8 +18,20 @@ import com.sun.jersey.api.client.ClientHandlerException;
  * 
  */
 public class AdbMonitor implements Runnable {
-
+	
+	/**
+	 * Callback interface for monitor events
+	 * 
+	 * @author SauliusAlisauskas 2013-03-08 Initial version
+	 *
+	 */
 	public interface Callback {
+		
+		/**
+		 * Called when new device has been found
+		 * 
+		 * @param device
+		 */
 		void onNewDeviceFound(Device device);
 	}
 
@@ -46,20 +58,16 @@ public class AdbMonitor implements Runnable {
 	 * 
 	 * @param device
 	 */
-	private void getDeviceProperties(Device device) {
+	private DeviceType getDeviceType(Device device) {
 		mLog.info("Scaning device:" + device);
 		// TODO: run test on device to determine it's properties
 		DeviceType dt = null;
 		try {
 			dt = mDeviceInfoCollector.getDeviceTypeInfo(device.getSerialNumber());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		DeviceType deviceTypeSynced = mWsApi.getDeviceType(dt);
-		device.setDeviceTypeId(deviceTypeSynced.getId());
-		device.setDeviceOsId(1L);
+			mLog.error("Could not read device type");
+		}		
+		return dt;
 	}
 
 	/**
@@ -73,9 +81,15 @@ public class AdbMonitor implements Runnable {
 		mLog.info("Registering device:" + deviceName);
 		Device device = new Device();
 		device.setUserId(mConfig.getUserId());
+		device.setOwnerId(mConfig.getUserId());
 		device.setSerialNumber(deviceName);
 		device.setState(DeviceState.ONLINE);
-		getDeviceProperties(device);
+		DeviceType deviceType = getDeviceType(device);
+		if (null != deviceType) {
+			DeviceType deviceTypeSynced = mWsApi.syncDeviceType(deviceType);
+			device.setDeviceTypeId(deviceTypeSynced.getId());
+			device.setDeviceOsId(1L);
+		}
 		Long deviceId = mWsApi.registerDevice(device);
 		device.setId(deviceId);
 		return device;

@@ -7,6 +7,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.cbt.ws.entity.Device;
 
+/**
+ * Dynamic storage of available devices
+ * 
+ * @author SauliusAlisauskas 2013-03-22 Initial version
+ *
+ */
 public class Store {
 	private ConcurrentHashMap<String, Device> mDevices = new ConcurrentHashMap<String, Device>(5);
 

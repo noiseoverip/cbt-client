@@ -1,0 +1,4 @@
+List of devices attache
+emulator-5554   device
+emulator-5556   device
+emulator-5557   device
