@@ -8,11 +8,11 @@ import javax.inject.Inject;
 import org.apache.commons.exec.CommandLine;
 import org.apache.log4j.Logger;
 
+import com.cbt.core.exceptions.CbtTestResultParseExeception;
 import com.cbt.ws.entity.DeviceJob;
 import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.DeviceJobResult.JunitTestSummary;
 import com.cbt.ws.entity.TestPackage;
-import com.cbt.ws.exceptions.CbtTestResultParseExeception;
 import com.cbt.ws.jooq.enums.DeviceJobResultState;
 import com.google.common.base.Joiner;
 

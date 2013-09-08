@@ -2,7 +2,7 @@ package com.cbt.client;
 
 import javax.inject.Named;
 
-import com.cbt.ws.utils.Utils;
+import com.cbt.core.utils.Utils;
 import com.google.inject.Inject;
 
 /**

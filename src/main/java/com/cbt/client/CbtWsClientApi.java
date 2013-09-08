@@ -10,12 +10,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 
+import com.cbt.core.utils.Utils;
 import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
 import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.DeviceType;
 import com.cbt.ws.entity.TestPackage;
-import com.cbt.ws.utils.Utils;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;

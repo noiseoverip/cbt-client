@@ -7,8 +7,8 @@ import java.io.IOException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.cbt.core.exceptions.CbtTestResultParseExeception;
 import com.cbt.ws.entity.DeviceJobResult;
-import com.cbt.ws.exceptions.CbtTestResultParseExeception;
 import com.cbt.ws.jooq.enums.DeviceJobResultState;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
