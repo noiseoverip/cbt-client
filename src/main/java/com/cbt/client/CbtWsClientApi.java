@@ -141,8 +141,11 @@ public class CbtWsClientApi {
 		DeviceJob job = null;
 		mLogger.debug("Received response:" + response);
 		if (Status.OK.getStatusCode() == response.getStatus()) {
-			// Currently we care only about oldest job in the list
-			job = response.getEntity(DeviceJob[].class)[0];
+			// Currently we care only about oldest job in the list			
+			DeviceJob[] jobs = response.getEntity(DeviceJob[].class);
+			if (jobs.length > 0) {
+				job = jobs[0];
+			}
 		}
 		return job;
 	}
