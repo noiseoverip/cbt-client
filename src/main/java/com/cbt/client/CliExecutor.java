@@ -27,7 +27,7 @@ public class CliExecutor {
 		mLog.info("exec sync: " + command.toString());
 		mStdout = new ByteArrayOutputStream();
 		getExecutor().setStreamHandler(new PumpStreamHandler(mStdout));
-		return getExecutor().execute(command);
+    return getExecutor().execute(command);
 	}
 
 	private DefaultExecutor getExecutor() {

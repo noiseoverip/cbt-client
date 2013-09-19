@@ -15,9 +15,7 @@ public class GuiceModuleMain extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(CbtClient.class);
-		bind(AndroidApplicationInstaller.class);
 		bind(CliExecutor.class);
-		bind(TestExecutor.class);
 		bind(AdbApi.class);
 		bind(CbtWsClientApi.class);
 		bind(Store.class).in(Singleton.class);

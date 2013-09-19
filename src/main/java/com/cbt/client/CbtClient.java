@@ -2,6 +2,7 @@ package com.cbt.client;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -25,7 +26,7 @@ public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
 	private ScheduledExecutorService mDeviceMonitorExecutor;
 	private Map<String, ScheduledFuture<?>> mDeviceWorkers = new HashMap<String, ScheduledFuture<?>>();
 	private Injector mInjector;
-	private final Logger mLog = Logger.getLogger(AndroidApplicationInstaller.class);
+	private final Logger mLog = Logger.getLogger(CbtClient.class);
 	private Store mStore;
 	private Configuration mConfig;
 	private CbtWsClientApi mCbtClientApi;
@@ -67,8 +68,15 @@ public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
 		worker.setCallback(this);
 		ScheduledFuture<?> future = mDeviceMonitorExecutor.scheduleAtFixedRate(worker, 1, 5, TimeUnit.SECONDS);
 		addDeviceWorkerFuture(device, future);
+    try {
+      future.get();
+    } catch (InterruptedException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+    } catch (ExecutionException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+    }
 
-	}
+  }
 
 	public void start() {
 		if (authenticate()) {
