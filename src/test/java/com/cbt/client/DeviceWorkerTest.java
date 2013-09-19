@@ -1,75 +1,70 @@
 package com.cbt.client;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.cbt.ws.entity.Device;
+import com.cbt.ws.jooq.enums.DeviceState;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import com.cbt.ws.entity.Device;
-import com.cbt.ws.entity.DeviceJob;
-import com.cbt.ws.entity.TestPackage;
-import com.cbt.ws.jooq.enums.DeviceJobStatus;
-import com.cbt.ws.jooq.enums.DeviceState;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * UT for {@link DeviceWorker}
- * 
+ *
  * @author SauliusAlisauskas 2013-03-18 Initial version
- * 
  */
 public class DeviceWorkerTest {
 
-	private DeviceWorker mUnit;
-	private Device mDevice;
-	private AdbApi mAdbApi;
-	private CbtWsClientApi mWsApi;
-	private static final List<String> mTestDevices = Arrays.asList("myDevice1", "myDevice2");
+   private DeviceWorker mUnit;
+   private Device mDevice;
+   private AdbApi mAdbApi;
+   private CbtWsClientApi mWsApi;
+   private static final List<String> mTestDevices = Arrays.asList("myDevice1", "myDevice2");
 
-	@BeforeMethod
-	public void before() {
-		mDevice = new Device();
-		mDevice.setState(DeviceState.OFFLINE);
-		mDevice.setSerialNumber(mTestDevices.get(0));
-		mDevice.setId(new Random().nextLong());
-		mAdbApi = mock(AdbApi.class);
-		mWsApi = mock(CbtWsClientApi.class);
-		mUnit = new DeviceWorker(mAdbApi, mWsApi);
-		mUnit.setDevice(mDevice);
-	}
+   @BeforeMethod
+   public void before() {
+      mDevice = new Device();
+      mDevice.setState(DeviceState.OFFLINE);
+      mDevice.setSerialNumber(mTestDevices.get(0));
+      mDevice.setId(new Random().nextLong());
+      mAdbApi = mock(AdbApi.class);
+      mWsApi = mock(CbtWsClientApi.class);
+      mUnit = new DeviceWorker(mAdbApi, mWsApi);
+      mUnit.setDevice(mDevice);
+   }
 
-	@Test
-	public void testRunDeviceFound() throws Exception {
-		when(mAdbApi.getDevices()).thenReturn(new ArrayList<String>(mTestDevices));
+   @Test
+   public void testRunDeviceFound() throws Exception {
+      when(mAdbApi.getDevices()).thenReturn(new ArrayList<String>(mTestDevices));
 
-		// run
-		mUnit.run();
+      // run
+      mUnit.run();
 
-		verify(mWsApi, times(1)).updatedevice(any(Device.class));
-		verify(mWsApi, times(1)).getWaitingJob(any(Device.class));
-		Assert.assertEquals(DeviceState.ONLINE, mDevice.getState());
-	}
+      verify(mWsApi, times(1)).updatedevice(any(Device.class));
+      verify(mWsApi, times(1)).getWaitingJob(any(Device.class));
+      Assert.assertEquals(DeviceState.ONLINE, mDevice.getState());
+   }
 
-	@Test
-	public void testRunDeviceNotFOund() throws Exception {
-		when(mAdbApi.getDevices()).thenReturn(new ArrayList<String>());
+   @Test
+   public void testRunDeviceNotFOund() throws Exception {
+      when(mAdbApi.getDevices()).thenReturn(new ArrayList<String>());
 
-		// run
-		mUnit.run();
+      // run
+      mUnit.run();
 
-		verify(mWsApi, times(1)).updatedevice(any(Device.class));
-		verify(mWsApi, times(0)).getWaitingJob(any(Device.class));
-		Assert.assertEquals(DeviceState.OFFLINE, mDevice.getState());
-	}
+      verify(mWsApi, times(1)).updatedevice(any(Device.class));
+      verify(mWsApi, times(0)).getWaitingJob(any(Device.class));
+      Assert.assertEquals(DeviceState.OFFLINE, mDevice.getState());
+   }
 
 // Fails with spoon for now
 //	@Test
