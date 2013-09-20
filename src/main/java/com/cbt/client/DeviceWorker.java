@@ -236,27 +236,27 @@ public class DeviceWorker implements Runnable {
 
    private DeviceJobResult parseJobResult(SpoonSummary summary, TestPackage testPackage, String output) {
       DeviceJobResult jobResult = new DeviceJobResult();
-      jobResult.setTestsErrors(0);
-      jobResult.setTestsFailed(0);
+      jobResult.setTestserrors(0);
+      jobResult.setTestsfailed(0);
 
       DeviceResult spoonResult = summary.getResults().get(mDevice.getSerialNumber());
       for (DeviceResult result : summary.getResults().values()) {
          if (result.getInstallFailed()) {
-            jobResult.setTestsErrors(jobResult.getTestsErrors() + 1);
+            jobResult.setTestserrors(jobResult.getTestsErrors() + 1);
          }
          if (!result.getExceptions().isEmpty() && result.getTestResults().isEmpty()) {
-            jobResult.setTestsErrors(jobResult.getTestsErrors() + 1);
+            jobResult.setTestserrors(jobResult.getTestsErrors() + 1);
          }
          for (DeviceTestResult methodResult : result.getTestResults().values()) {
             if (methodResult.getStatus() != DeviceTestResult.Status.PASS) {
                jobResult.setState(DeviceJobResultState.FAILED);
-               jobResult.setTestsFailed(jobResult.getTestsFailed() + 1);
+               jobResult.setTestsfailed(jobResult.getTestsFailed() + 1);
             }
          }
       }
 
-      jobResult.setDevicejobId(testPackage.getDevicejobId());
-      jobResult.setTestsRun(spoonResult.getTestResults().size());
+      jobResult.setDevicejobid(testPackage.getDevicejobId());
+      jobResult.setTestsrun(spoonResult.getTestResults().size());
       jobResult.setOutput(output);
       jobResult.setState(jobResult.getState() == null ? DeviceJobResultState.PASSED : jobResult.getState());
       jobResult.setCreated(new Date(summary.getStarted()));
