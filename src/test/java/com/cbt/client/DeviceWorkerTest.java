@@ -29,6 +29,7 @@ public class DeviceWorkerTest {
    private AdbApi mAdbApi;
    private CbtWsClientApi mWsApi;
    private static final List<String> mTestDevices = Arrays.asList("myDevice1", "myDevice2");
+   private Configuration mConfig;
 
    @BeforeMethod
    public void before() {
@@ -38,7 +39,8 @@ public class DeviceWorkerTest {
       mDevice.setId(new Random().nextLong());
       mAdbApi = mock(AdbApi.class);
       mWsApi = mock(CbtWsClientApi.class);
-      mUnit = new DeviceWorker(mAdbApi, mWsApi);
+      mConfig = mock(Configuration.class);
+      mUnit = new DeviceWorker(mAdbApi, mWsApi, mConfig);
       mUnit.setDevice(mDevice);
    }
 

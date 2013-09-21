@@ -38,6 +38,8 @@ import java.util.List;
  * @author SauliusAlisauskas 2013-03-22 Initial version
  */
 public class DeviceWorker implements Runnable {
+   private final Configuration mConfig;
+
    public interface Callback {
       void onDeviceOffline(Device device);
    }
@@ -49,9 +51,10 @@ public class DeviceWorker implements Runnable {
    private CbtWsClientApi mWsApi;
 
    @Inject
-   public DeviceWorker(AdbApi adbApi, CbtWsClientApi wsApi) {
+   public DeviceWorker(AdbApi adbApi, CbtWsClientApi wsApi, Configuration config) {
       mAdbApi = adbApi;
       mWsApi = wsApi;
+      mConfig = config;
    }
 
    /**
@@ -93,12 +96,12 @@ public class DeviceWorker implements Runnable {
                tempDir = Files.createTempDirectory("cbt-spoon");
                SpoonRunner runner = new SpoonRunner.Builder()
                      .setOutputDirectory(tempDir.toFile())
-                     .setApplicationApk(new File(testPackage.getTestTargetPath()))
-                     .setInstrumentationApk(new File(testPackage.getTestScriptPath()))
+                     .setApplicationApk(new File(mConfig.getPathWorkspace(), testPackage.getTestTargetFileName()))
+                     .setInstrumentationApk(new File(mConfig.getPathWorkspace(), testPackage.getTestScriptFileName()))
                      .setDisableHtml(true)
                      .setDisableScreenshot(true)
-                     .setUiAutomator(true)
-                     .setAndroidSdk(new File("/Users/iljabobkevic/personal/dev/adt/sdk"))
+//                     .setUiAutomator(true)
+                     .setAndroidSdk(new File(mConfig.getPathAndroidSdk()))
                      .setClassName(Joiner.on(",").join(job.getMetadata().getTestClasses()))
                      .addDevice(mDevice.getSerialNumber())
                      .setDebug(true).build();

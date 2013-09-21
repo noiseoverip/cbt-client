@@ -18,6 +18,7 @@ public class Configuration {
    private String userName;
    private String userPassword;
    private boolean traceRestClient;
+   private String pathAndroidSdk;
 
    public boolean isTraceRestClient() {
       return traceRestClient;
@@ -29,6 +30,10 @@ public class Configuration {
 
    public String getPathAndroidADB() {
       return pathAndroidADB;
+   }
+
+   public String getPathAndroidSdk() {
+      return pathAndroidSdk;
    }
 
    public String getPathWorkspace() {
@@ -54,6 +59,11 @@ public class Configuration {
    @Inject
    public void setPathAndroidADB(@Named("path_adb") String pathAndroidADB) {
       this.pathAndroidADB = pathAndroidADB;
+   }
+
+   @Inject
+   public void setPathAndroidSdk(@Named("path_sdk") String pathAndroidSdk) {
+      this.pathAndroidSdk = pathAndroidSdk;
    }
 
    @Inject
