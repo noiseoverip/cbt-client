@@ -3,9 +3,9 @@ package com.cbt.client;
 import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
 import com.cbt.ws.entity.DeviceJobResult;
-import com.cbt.ws.entity.TestPackage;
 import com.cbt.ws.jooq.enums.DeviceJobResultState;
 import com.cbt.ws.jooq.enums.DeviceState;
+import com.cbt.ws.jooq.enums.TestscriptTestscriptType;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -89,18 +89,29 @@ public class DeviceWorker implements Runnable {
          if (null != job) {
             mLogger.info("Found job " + job);
 
-            TestPackage testPackage = fetchTestPackage(job);
+            // Fetch testpackage.zip file
+            try {
+               mWsApi.checkoutTestPackage(job.getId());
+            } catch (CbtWsClientException | IOException e) {
+               exitJobRun("Error while checking out files", e);
+            }
+
+
+            boolean isUiAutomator = false;
+            if (TestscriptTestscriptType.UIAUTOMATOR.equals(job.getTestScript().getTestScriptType())) {
+               isUiAutomator = true;
+            }
 
             Path tempDir = null;
             try {
                tempDir = Files.createTempDirectory("cbt-spoon");
                SpoonRunner runner = new SpoonRunner.Builder()
                      .setOutputDirectory(tempDir.toFile())
-                     .setApplicationApk(new File(mConfig.getPathWorkspace(), testPackage.getTestTargetFileName()))
-                     .setInstrumentationApk(new File(mConfig.getPathWorkspace(), testPackage.getTestScriptFileName()))
+                     .setApplicationApk(new File(mConfig.getPathWorkspace(), job.getTestTarget().getFileName()))
+                     .setInstrumentationApk(new File(mConfig.getPathWorkspace(), job.getTestScript().getFileName()))
                      .setDisableHtml(true)
                      .setDisableScreenshot(true)
-//                     .setUiAutomator(true)
+                     .setUiAutomator(isUiAutomator)
                      .setAndroidSdk(new File(mConfig.getPathAndroidSdk()))
                      .setClassName(Joiner.on(",").join(job.getMetadata().getTestClasses()))
                      .addDevice(mDevice.getSerialNumber())
@@ -126,7 +137,7 @@ public class DeviceWorker implements Runnable {
                FileReader resultFile = new FileReader(new File(tempDir.toAbsolutePath().toString(), "result.json"));
                SpoonSummary spoonSummary = GSON.fromJson(resultFile, SpoonSummary.class);
                resultFile.close();
-               DeviceJobResult result = parseJobResult(spoonSummary, testPackage, baos.toString());
+               DeviceJobResult result = parseJobResult(spoonSummary, job.getId(), baos.toString());
 
                mLogger.info("Publishing results:" + result);
                publishTestResult(result);
@@ -169,25 +180,6 @@ public class DeviceWorker implements Runnable {
       mLogger.error(message, e);
       // TODO: send result of abnormal exit to server
       throw new RuntimeException(message);
-   }
-
-   /**
-    * Retrieve test package for specified device job
-    *
-    * @param job
-    * @return
-    * @throws CbtWsClientException
-    * @throws IOException
-    * @see {@link CbtWsClientApi#checkoutTestPackage(Long)}
-    */
-   private TestPackage fetchTestPackage(DeviceJob job) {
-      TestPackage testPackage = null;
-      try {
-         testPackage = mWsApi.checkoutTestPackage(job.getId());
-      } catch (CbtWsClientException | IOException e) {
-         exitJobRun("Error while checking out files", e);
-      }
-      return testPackage;
    }
 
    /**
@@ -237,29 +229,31 @@ public class DeviceWorker implements Runnable {
          .setPrettyPrinting() //
          .create();
 
-   private DeviceJobResult parseJobResult(SpoonSummary summary, TestPackage testPackage, String output) {
+   private DeviceJobResult parseJobResult(SpoonSummary summary, long deviceJobId, String output) {
       DeviceJobResult jobResult = new DeviceJobResult();
-      jobResult.setTestserrors(0);
-      jobResult.setTestsfailed(0);
+      jobResult.setTestsErrors(0);
+      jobResult.setTestsFailed(0);
 
       DeviceResult spoonResult = summary.getResults().get(mDevice.getSerialNumber());
       for (DeviceResult result : summary.getResults().values()) {
          if (result.getInstallFailed()) {
-            jobResult.setTestserrors(jobResult.getTestsErrors() + 1);
+            jobResult.setTestsErrors(jobResult.getTestsErrors() + 1);
+            jobResult.setState(DeviceJobResultState.FAILED);
          }
          if (!result.getExceptions().isEmpty() && result.getTestResults().isEmpty()) {
-            jobResult.setTestserrors(jobResult.getTestsErrors() + 1);
+            jobResult.setTestsErrors(jobResult.getTestsErrors() + 1);
+            jobResult.setState(DeviceJobResultState.FAILED);
          }
          for (DeviceTestResult methodResult : result.getTestResults().values()) {
             if (methodResult.getStatus() != DeviceTestResult.Status.PASS) {
                jobResult.setState(DeviceJobResultState.FAILED);
-               jobResult.setTestsfailed(jobResult.getTestsFailed() + 1);
+               jobResult.setTestsFailed(jobResult.getTestsFailed() + 1);
             }
          }
       }
 
-      jobResult.setDevicejobid(testPackage.getDevicejobId());
-      jobResult.setTestsrun(spoonResult.getTestResults().size());
+      jobResult.setDevicejobId(deviceJobId);
+      jobResult.setTestsRun(spoonResult.getTestResults().size());
       jobResult.setOutput(output);
       jobResult.setState(jobResult.getState() == null ? DeviceJobResultState.PASSED : jobResult.getState());
       jobResult.setCreated(new Date(summary.getStarted()));

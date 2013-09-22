@@ -5,7 +5,6 @@ import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
 import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.DeviceType;
-import com.cbt.ws.entity.TestPackage;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -52,23 +51,8 @@ public class CbtWsClientApi {
     * @throws CbtWsClientException
     * @throws IOException
     */
-   public TestPackage checkoutTestPackage(Long deviceJobId) throws CbtWsClientException, IOException {
+   public void checkoutTestPackage(Long deviceJobId) throws CbtWsClientException, IOException {
       mLogger.info("Checking out files for job id:" + deviceJobId + " workspace:" + mWorkspace);
-
-      // Get Test package information
-      TestPackage testPackage = null;
-      try {
-
-         testPackage = getWebRes()
-               .path("testpackage")
-               .queryParam("devicejobId", deviceJobId.toString())
-               .get(TestPackage.class);
-
-      } catch (Exception e) {
-         throw new CbtWsClientException("Could not fetch test package information", e);
-      }
-
-      mLogger.debug("Received info:" + testPackage);
 
       // Fetch required files
       ClientResponse response = getWebRes()
@@ -95,8 +79,6 @@ public class CbtWsClientApi {
       mLogger.debug("Zip file fetched");
 
       Utils.extractZipFiles(tmpZipFileName, mWorkspace);
-
-      return testPackage;
    }
 
    /**
