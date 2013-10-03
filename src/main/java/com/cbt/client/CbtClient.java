@@ -1,106 +1,179 @@
 package com.cbt.client;
 
+import com.android.ddmlib.IDevice;
+import com.cbt.client.configuration.Configuration;
+import com.cbt.client.device.DeviceMonitor;
+import com.cbt.client.device.DeviceWorker;
+import com.cbt.client.util.SupervisorFactory;
+import com.cbt.client.ws.CbtWsClientException;
+import com.cbt.client.ws.WsClient;
 import com.cbt.ws.entity.Device;
+import com.cbt.ws.entity.DeviceType;
+import com.cbt.ws.jooq.enums.DeviceState;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.sun.jersey.api.client.ClientHandlerException;
 import org.apache.log4j.Logger;
 
-import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Main CBT client class responsible for starting thread pools and workers
+ * Class CbtClient
  *
- * @author SauliusAlisauskas 2013-03-19 Initial version
+ * @author iljabobkevic 2013-10-02 initial version
  */
-public class CbtClient implements AdbMonitor.Callback, DeviceWorker.Callback {
-   private AdbMonitor mAdbMonitor;
-   private ScheduledExecutorService mDeviceMonitorExecutor;
-   private Map<String, ScheduledFuture<?>> mDeviceWorkers = new HashMap<String, ScheduledFuture<?>>();
-   private Injector mInjector;
-   private final Logger mLog = Logger.getLogger(CbtClient.class);
-   private Store mStore;
-   private Configuration mConfig;
-   private CbtWsClientApi mCbtClientApi;
+public class CbtClient implements Callable<Void> {
+
+   /**
+    * Number of simultaneous device worker threads. Should be equal to most probable device count.
+    */
+   private static final int WORKER_MAX_THREAD = 10;
+   /**
+    * How often device worker should be called in seconds. Corresponds to the period at which it shall check if there
+    * any jobs to be started.
+    */
+   private static final int WORKER_SCHEDULE_DELAY = 5;
+   /**
+    * Number of simultaneous device monitoring threads
+    */
+   private static final int MONITOR_MAX_THREAD = 1;
+   /**
+    * How ofter device monitoring threads should be called in seconds
+    */
+   private static final int MONITOR_SCHEDULE_DELAY = 10;
+   private final Configuration config;
+   private final WsClient wsClient;
+   private final Logger logger = Logger.getLogger(CbtClient.class);
+   private final DeviceMonitor monitor;
+   private final Injector injector;
+   private final ScheduledExecutorService deviceMonitorExecutor = Executors.newScheduledThreadPool(MONITOR_MAX_THREAD);
+   private final ScheduledExecutorService deviceWorkerExecutor = Executors.newScheduledThreadPool(WORKER_MAX_THREAD);
+   private boolean isStopped = false;
 
    @Inject
-   public CbtClient(AdbMonitor statusUpdater, Store store, Injector injector, Configuration config, CbtWsClientApi cbtClientApi) {
-      mConfig = config;
-      mStore = store;
-      mAdbMonitor = statusUpdater;
-      mInjector = injector;
-      mCbtClientApi = cbtClientApi;
+   public CbtClient(Configuration config, WsClient wsClient, DeviceMonitor monitor, Injector injector) {
+      this.config = config;
+      this.wsClient = wsClient;
+      this.injector = injector;
+      this.monitor = monitor;
+      this.monitor.setCallback(new DeviceMonitorCallback());
    }
 
-   private synchronized void addDeviceWorkerFuture(Device device, ScheduledFuture<?> future) {
-      mDeviceWorkers.put(device.getSerialNumber(), future);
+   /**
+    * Set stopped flag so that client would exit after executing scheduled device monitor
+    */
+   public synchronized void setStopped() {
+      isStopped = true;
    }
 
-   private synchronized ScheduledFuture<?> getDeviceWorkerFuture(Device device) {
-      return mDeviceWorkers.get(device.getSerialNumber());
+   /**
+    * True if stop flag was set
+    *
+    * @return true if stop flag was set
+    */
+   public synchronized boolean isStopped() {
+      return isStopped;
    }
 
-   @Override
-   public void onDeviceOffline(Device device) {
-      mLog.info("Removing " + device);
-      ScheduledFuture<?> future = getDeviceWorkerFuture(device);
-      future.cancel(true);
-      mStore.remove(device);
-
-   }
-
-   @Override
-   public void onNewDeviceFound(Device device) {
-      mLog.info("Adding device worker " + device);
-      device.setUserId(mConfig.getUserId());
-      mStore.addDevice(device);
-      DeviceWorker worker = mInjector.getInstance(DeviceWorker.class);
-      worker.setCallback(this);
-      worker.setDevice(device);
-      worker.setCallback(this);
-      ScheduledFuture<?> future = mDeviceMonitorExecutor.scheduleAtFixedRate(worker, 1, 5, TimeUnit.SECONDS);
-      addDeviceWorkerFuture(device, future);
-      try {
-         future.get();
-      } catch (InterruptedException e) {
-         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      } catch (ExecutionException e) {
-         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      }
-
-   }
-
-   public void start() {
-      if (authenticate()) {
-         mAdbMonitor.setCallback(this);
-         mDeviceMonitorExecutor = Executors.newScheduledThreadPool(4);
-         mDeviceMonitorExecutor.scheduleAtFixedRate(mAdbMonitor, 1, 10, TimeUnit.SECONDS);
-
-         try {
-            TimeUnit.SECONDS.sleep(9000);
-         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-         }
-      } else {
-         mLog.error("Could not authenticate");
-      }
-   }
-
+   /**
+    * Try to authenticate defined user with the server
+    *
+    * @return true if succeeded
+    */
    private boolean authenticate() {
-      Map<String, Object> userProperties = mCbtClientApi.getUserByName(mConfig.getUserName());
+      Map<String, Object> userProperties = wsClient.getUserByName(config.getUsername());
+      boolean result = false;
       if (userProperties != null) {
-         mLog.info("Authenticated user:" + userProperties);
-         mConfig.setUserId(Long.valueOf(userProperties.get("id").toString()));
-         mLog.info("Set user id to" + mConfig.getUserId());
-         return true;
+         logger.info("Authenticated user: " + userProperties);
+         config.setUserId(Long.valueOf(userProperties.get("id").toString()));
+         logger.info("Set user id to: " + config.getUserId());
+         result = true;
       }
-      return false;
+      return result;
    }
 
+   /**
+    * Authenticate and continuously schedule device monitor. {@link java.util.concurrent.ScheduledFuture#get()} shall
+    * be called to retrieve the result.
+    *
+    * @return null
+    * @throws Exception - From scheduled future
+    */
+   @Override
+   public Void call() throws Exception {
+      logger.info("Client is running...");
+      if (authenticate()) {
+         ScheduledFuture<Void> future;
+         do {
+            future = deviceMonitorExecutor.schedule(monitor, MONITOR_SCHEDULE_DELAY, TimeUnit.SECONDS);
+            future.get();
+         } while (!future.isCancelled() || isStopped());
+      } else {
+         logger.error("Could not authenticate");
+      }
+      return null;
+   }
+
+   /**
+    * {@link com.cbt.client.device.DeviceMonitor.Callback} implementation
+    */
+   public class DeviceMonitorCallback implements DeviceMonitor.Callback {
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public Device deviceOnline(IDevice device) throws CbtWsClientException {
+         logger.info("Registering device:" + device);
+         Device cbtDevice = new Device();
+         cbtDevice.setUserId(config.getUserId());
+         cbtDevice.setOwnerId(config.getUserId());
+         cbtDevice.setSerialNumber(device.getSerialNumber());
+         cbtDevice.setState(DeviceState.ONLINE);
+         DeviceType deviceType = new DeviceType();
+         deviceType.setManufacture(device.getProperty("ro.product.manufacturer"));
+         deviceType.setModel(device.getProperty("ro.product.model"));
+         if (null != deviceType) {
+            DeviceType deviceTypeSynced = wsClient.syncDeviceType(deviceType);
+            cbtDevice.setDeviceTypeId(deviceTypeSynced.getId());
+            cbtDevice.setDeviceOsId(1L);
+         }
+         Long deviceId = wsClient.registerDevice(cbtDevice);
+         cbtDevice.setId(deviceId);
+         return cbtDevice;
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void deviceUpdate(Device device) {
+         try {
+            wsClient.updateDevice(device);
+         } catch (CbtWsClientException e) {
+            logger.error("Could not update device:" + device);
+         } catch (ClientHandlerException connectionException) {
+            logger.error("Connection problem", connectionException);
+         }
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void deviceWorker(Device device) {
+         // TODO: Introduce busy concept
+         synchronized (device) {
+            device.setTitle("BUSY");
+         }
+         DeviceWorker worker = injector.getInstance(DeviceWorker.class);
+         worker.setDevice(device);
+         SupervisorFactory.supervise(deviceWorkerExecutor.schedule(worker, WORKER_SCHEDULE_DELAY, TimeUnit.SECONDS));
+      }
+   }
 }

@@ -1,4 +1,4 @@
-package com.cbt.client;
+package com.cbt.client.ws;
 
 /**
  * Base exception class for CBT client exceptions

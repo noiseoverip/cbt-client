@@ -1,0 +1,52 @@
+package com.cbt.client.configuration;
+
+import com.beust.jcommander.IDefaultProvider;
+import com.google.inject.Inject;
+
+import javax.inject.Named;
+import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Class ConfigurationDefaultProvider used for combining guice named binding injections with jcommander's
+ * default value provider implementation.
+ *
+ * @author iljabobkevic 2013-10-02 initial version
+ */
+@Singleton
+public class ConfigurationDefaultProvider implements IDefaultProvider {
+
+   private static final int EXPECTED_CONFIG_COUNT = 5;
+   private Map<String, String> config = new HashMap<String, String>(EXPECTED_CONFIG_COUNT);
+
+   @Inject(optional = true)
+   public void setWorkspace(@Named("path_workspace") String workspace) {
+      config.put("--workspace", workspace);
+   }
+
+   @Inject(optional = true)
+   public void setServer(@Named("uri_server") String server) {
+      config.put("--server", server);
+   }
+
+   @Inject(optional = true)
+   public void setUsername(@Named("username") String username) {
+      config.put("--username", username);
+   }
+
+   @Inject(optional = true)
+   public void setPassword(@Named("password") String password) {
+      config.put("--password", password);
+   }
+
+   @Inject(optional = true)
+   public void setDebug(@Named("debug_rest") String debug) {
+      config.put("--debug", debug);
+   }
+
+   @Override
+   public String getDefaultValueFor(String s) {
+      return config.get(s);
+   }
+}

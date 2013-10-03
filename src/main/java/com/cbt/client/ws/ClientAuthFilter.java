@@ -1,5 +1,6 @@
-package com.cbt.client;
+package com.cbt.client.ws;
 
+import com.cbt.client.configuration.Configuration;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
@@ -28,14 +29,14 @@ public class ClientAuthFilter extends ClientFilter {
    @Override
    public ClientResponse handle(ClientRequest request) {
       if (null == mAuthCookie) {
-         mAuthCookie = createAuthCookie(mConfig.getUserName(), mConfig.getUserPassword());
+         mAuthCookie = createAuthCookie(mConfig.getUsername(), mConfig.getPassword());
          mCookies.add(mAuthCookie);
       }
       request.getHeaders().put("Cookie", mCookies);
       return getNext().handle(request);
    }
 
-   private Cookie createAuthCookie(String username, String passoword) {
-      return new Cookie("auth", username + ":" + passoword);
+   private Cookie createAuthCookie(String username, String password) {
+      return new Cookie("auth", username + ":" + password);
    }
 }
