@@ -57,7 +57,6 @@ public class Utils {
     * @param adb
     */
    private static void waitForAdb(AndroidDebugBridge adb) {
-
       int i = 1;
       try {
          while (!adb.isConnected() && i++ < 10) {
@@ -67,7 +66,9 @@ public class Utils {
          throw new RuntimeException("Interrupted while waiting for adb to connect!", e);
       }
 
-      throw new RuntimeException("Unable to connect to adb");
+      if (!adb.isConnected()) {
+         throw new RuntimeException("Unable to connect to adb");
+      }
    }
 
    /**
