@@ -5,11 +5,14 @@ import com.cbt.ws.entity.Device;
 import com.cbt.ws.entity.DeviceJob;
 import com.cbt.ws.entity.DeviceJobResult;
 import com.cbt.ws.entity.DeviceType;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -54,7 +57,7 @@ public class WsClient {
     * @throws IOException
     */
    public void receiveTestPackage(long jobId, String deviceSerial) throws CbtWsClientException, IOException {
-      logger.info("Checking out files for job id: " + jobId + " workspace: " + workspace);
+      logger.debug("Checking out files for job id: " + jobId + " workspace: " + workspace);
 
       // Fetch required files
       ClientResponse response = getWebResource()
@@ -90,7 +93,8 @@ public class WsClient {
     */
    private Client getClient() {
       if (null == jerseyClient) {
-         jerseyClient = Client.create();
+         ClientConfig clientConfig = new DefaultClientConfig(JacksonJsonProvider.class);
+         jerseyClient = Client.create(clientConfig);
          jerseyClient.setConnectTimeout(JERSEY_CLIENT_TIMEOUT);
          jerseyClient.setReadTimeout(JERSEY_CLIENT_TIMEOUT);
          if (debug) {
@@ -126,6 +130,7 @@ public class WsClient {
             .path("user")
             .queryParam("name", name)
             .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
             .get(ClientResponse.class);
 
       return ClientResponse.Status.OK.getStatusCode() == response.getStatus() ? response.getEntity(Map.class) : null;
@@ -153,7 +158,7 @@ public class WsClient {
             return Long.valueOf(response.getEntity(String.class));
          case CONFLICT:
             Device registeredDevice = response.getEntity(Device.class);
-            logger.warn("Device was already registered: " + registeredDevice);
+            logger.debug("Device was already registered: " + registeredDevice);
             return registeredDevice.getId();
          default:
             logger.debug("Device register failed");

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author iljabobkevic 2013-10-02 initial version
  */
-public class CbtClient implements Callable<Void> {
+public class CbtClient implements Callable<Boolean> {
 
    /**
     * Number of simultaneous device worker threads. Should be equal to most probable device count.
@@ -46,6 +46,11 @@ public class CbtClient implements Callable<Void> {
     * How ofter device monitoring threads should be called in seconds
     */
    private static final int MONITOR_SCHEDULE_DELAY = 10;
+
+   /**
+    * Device title to be set when device is used for the job
+    */
+   static final String DEVICE_TITLE_BUSY = "BUSY";
    private final Configuration config;
    private final WsClient wsClient;
    private final Logger logger = Logger.getLogger(CbtClient.class);
@@ -85,13 +90,12 @@ public class CbtClient implements Callable<Void> {
     *
     * @return true if succeeded
     */
-   private boolean authenticate() {
+   boolean authenticate() {
       Map<String, Object> userProperties = wsClient.getUserByName(config.getUsername());
       boolean result = false;
       if (userProperties != null) {
-         logger.info("Authenticated user: " + userProperties);
+         logger.debug("Authenticated user: " + userProperties);
          config.setUserId(Long.valueOf(userProperties.get("id").toString()));
-         logger.info("Set user id to: " + config.getUserId());
          result = true;
       }
       return result;
@@ -105,18 +109,20 @@ public class CbtClient implements Callable<Void> {
     * @throws Exception - From scheduled future
     */
    @Override
-   public Void call() throws Exception {
+   public Boolean call() throws Exception {
       logger.info("Client is running...");
+      boolean result = true;
       if (authenticate()) {
          ScheduledFuture<Void> future;
          do {
             future = deviceMonitorExecutor.schedule(monitor, MONITOR_SCHEDULE_DELAY, TimeUnit.SECONDS);
             future.get();
-         } while (!future.isCancelled() || isStopped());
+         } while (!future.isCancelled() && !isStopped());
       } else {
          logger.error("Could not authenticate");
+         result = false;
       }
-      return null;
+      return result;
    }
 
    /**
@@ -129,7 +135,7 @@ public class CbtClient implements Callable<Void> {
        */
       @Override
       public Device deviceOnline(IDevice device) throws CbtWsClientException {
-         logger.info("Registering device:" + device);
+         logger.info("Registering device: " + device);
          Device cbtDevice = new Device();
          cbtDevice.setUserId(config.getUserId());
          cbtDevice.setOwnerId(config.getUserId());
@@ -169,7 +175,7 @@ public class CbtClient implements Callable<Void> {
       public void deviceWorker(Device device) {
          // TODO: Introduce busy concept
          synchronized (device) {
-            device.setTitle("BUSY");
+            device.setTitle(DEVICE_TITLE_BUSY);
          }
          DeviceWorker worker = injector.getInstance(DeviceWorker.class);
          worker.setDevice(device);

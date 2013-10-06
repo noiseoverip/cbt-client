@@ -45,6 +45,11 @@ public class ConfigurationDefaultProvider implements IDefaultProvider {
       config.put("--debug", debug);
    }
 
+   @Inject(optional = true)
+   public void setSdk(@Named("path_sdk") String sdk) {
+      config.put("--sdk", sdk);
+   }
+
    @Override
    public String getDefaultValueFor(String s) {
       return config.get(s);

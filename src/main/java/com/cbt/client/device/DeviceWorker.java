@@ -54,7 +54,7 @@ public class DeviceWorker implements Callable<Void> {
 
    @Override
    public Void call() throws Exception {
-      logger.info("Checking jobs for device: " + device);
+      logger.debug("Checking jobs for device: " + device);
       DeviceJob job = wsClient.getWaitingJob(device);
       try {
          if (null != job) {

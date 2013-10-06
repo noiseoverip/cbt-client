@@ -10,6 +10,7 @@ import com.cbt.client.util.SupervisorFactory;
 import com.cbt.client.util.Utils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -52,6 +53,10 @@ public class Main {
          return;
       }
 
+      if (parsedArgs.isDebug()) {
+         Logger.getRootLogger().setLevel(Level.DEBUG);
+      }
+
       // Initialize adb
       Utils.initAdb(parsedArgs.getSdk());
 
@@ -63,6 +68,7 @@ public class Main {
 
       // Terminate adb and stop
       Utils.terminateAdb();
+      pool.shutdownNow();
       logger.info("Application finished");
    }
 }

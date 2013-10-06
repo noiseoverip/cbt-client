@@ -22,26 +22,26 @@ import java.util.Properties;
  */
 public class GuiceModuleConfiguration extends AbstractModule {
 
-   private static final String DEFAULT_CONFIG_PATH = "/client.properties";
+   private static final String DEFAULT_CONFIG_PATH = "client.properties";
    private final Logger logger = Logger.getLogger(GuiceModuleConfiguration.class);
 
    @Override
    protected void configure() {
       Properties properties = new Properties();
       try {
-         // Try local file
-         InputStream input = Configuration.class.getResourceAsStream(DEFAULT_CONFIG_PATH);
+         // Try class loader (file should be in the class path)
+         InputStream input = Configuration.class.getResourceAsStream("/" + DEFAULT_CONFIG_PATH);
          if (null == input) {
-            // Try absolute path
-            logger.info("Trying:" + new File(DEFAULT_CONFIG_PATH).getAbsolutePath());
-            input = new FileInputStream(new File(DEFAULT_CONFIG_PATH).getAbsolutePath());
+            // Try file input stream (file should be in the *current* directory)
+            logger.trace("Trying: " + new File(DEFAULT_CONFIG_PATH));
+            input = new FileInputStream(new File(DEFAULT_CONFIG_PATH));
          }
          if (null != input) {
             properties.load(input);
          }
          Names.bindProperties(binder(), properties);
       } catch (FileNotFoundException e) {
-         logger.error("The configuration file Test.properties can not be found", e);
+         logger.trace("The configuration file Test.properties can not be found", e);
       } catch (IOException e) {
          logger.error("I/O Exception during loading configuration", e);
       }
