@@ -1,10 +1,10 @@
 package com.cbt.client.ws;
 
 import com.cbt.client.configuration.Configuration;
-import com.cbt.ws.entity.Device;
-import com.cbt.ws.entity.DeviceJob;
-import com.cbt.ws.entity.DeviceJobResult;
-import com.cbt.ws.entity.DeviceType;
+import com.cbt.core.entity.Device;
+import com.cbt.core.entity.DeviceJob;
+import com.cbt.core.entity.DeviceJobResult;
+import com.cbt.core.entity.DeviceType;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.inject.Inject;
 import com.sun.jersey.api.client.Client;

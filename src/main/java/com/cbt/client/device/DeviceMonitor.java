@@ -4,8 +4,8 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.cbt.client.util.Utils;
 import com.cbt.client.ws.CbtWsClientException;
-import com.cbt.ws.entity.Device;
-import com.cbt.ws.jooq.enums.DeviceState;
+import com.cbt.core.entity.Device;
+import com.cbt.jooq.enums.DeviceState;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;

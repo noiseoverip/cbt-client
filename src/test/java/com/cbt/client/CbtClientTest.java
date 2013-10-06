@@ -6,9 +6,9 @@ import com.cbt.client.device.DeviceMonitor;
 import com.cbt.client.device.DeviceWorker;
 import com.cbt.client.ws.CbtWsClientException;
 import com.cbt.client.ws.WsClient;
-import com.cbt.ws.entity.Device;
-import com.cbt.ws.entity.DeviceType;
-import com.cbt.ws.jooq.enums.DeviceState;
+import com.cbt.core.entity.Device;
+import com.cbt.core.entity.DeviceType;
+import com.cbt.jooq.enums.DeviceState;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Assert;
@@ -34,9 +34,9 @@ public class CbtClientTest {
    private static final long DUMMY_ID = 1L;
    private static final String DUMMY_VALUE = "DUMMY_VALUE";
    private final Configuration conf;
-   private DeviceMonitor monitor;
-   private Injector injector;
-   private WsClient wsClient;
+   private final DeviceMonitor monitor;
+   private final Injector injector;
+   private final WsClient wsClient;
 
    public CbtClientTest() {
       DUMMY_USER_PROPERTIES.put("id", DUMMY_ID);
