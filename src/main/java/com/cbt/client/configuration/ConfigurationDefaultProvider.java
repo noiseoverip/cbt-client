@@ -1,12 +1,12 @@
 package com.cbt.client.configuration;
 
-import com.beust.jcommander.IDefaultProvider;
-import com.google.inject.Inject;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Named;
+
+import com.beust.jcommander.IDefaultProvider;
+import com.google.inject.Inject;
 
 /**
  * Class ConfigurationDefaultProvider used for combining guice named binding injections with jcommander's
@@ -14,7 +14,6 @@ import java.util.Map;
  *
  * @author iljabobkevic 2013-10-02 initial version
  */
-@Singleton
 public class ConfigurationDefaultProvider implements IDefaultProvider {
 
    private static final int EXPECTED_CONFIG_COUNT = 5;

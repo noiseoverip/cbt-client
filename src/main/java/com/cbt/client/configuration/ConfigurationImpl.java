@@ -1,21 +1,19 @@
 package com.cbt.client.configuration;
 
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.Parameter;
-import com.cbt.core.utils.Utils;
-import com.google.inject.Singleton;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.Parameter;
+import com.cbt.core.utils.Utils;
 
 /**
  * Class ConfigurationImpl
  *
  * @author iljabobkevic 2013-10-02 initial version
  */
-@Singleton
 public class ConfigurationImpl extends AbstractConfiguration {
 
    /**

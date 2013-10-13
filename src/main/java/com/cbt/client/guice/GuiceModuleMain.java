@@ -3,6 +3,7 @@ package com.cbt.client.guice;
 import com.cbt.client.CbtClient;
 import com.cbt.client.configuration.Configuration;
 import com.cbt.client.configuration.ConfigurationImpl;
+import com.cbt.client.device.AdbWrapper;
 import com.cbt.client.device.DeviceMonitor;
 import com.cbt.client.ws.ClientAuthFilter;
 import com.cbt.client.ws.WsClient;
@@ -25,5 +26,6 @@ public class GuiceModuleMain extends AbstractModule {
       bind(WsClient.class);
       bind(ClientAuthFilter.class).in(Singleton.class);
       bind(Configuration.class).to(ConfigurationImpl.class).in(Singleton.class);
+      bind(AdbWrapper.class);
    }
 }
