@@ -1,13 +1,13 @@
 package com.cbt.client.configuration;
 
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.Parameter;
+import com.cbt.core.utils.Utils;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.Parameter;
-import com.cbt.core.utils.Utils;
 
 /**
  * Class ConfigurationImpl

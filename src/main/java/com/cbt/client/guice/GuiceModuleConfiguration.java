@@ -3,6 +3,7 @@ package com.cbt.client.guice;
 import com.beust.jcommander.IDefaultProvider;
 import com.cbt.client.configuration.Configuration;
 import com.cbt.client.configuration.ConfigurationDefaultProvider;
+import com.cbt.client.configuration.ConfigurationImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import org.apache.log4j.Logger;
@@ -46,5 +47,6 @@ public class GuiceModuleConfiguration extends AbstractModule {
          logger.error("I/O Exception during loading configuration", e);
       }
       bind(IDefaultProvider.class).to(ConfigurationDefaultProvider.class).in(Singleton.class);
+      bind(Configuration.class).to(ConfigurationImpl.class).in(Singleton.class);
    }
 }

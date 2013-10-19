@@ -1,18 +1,19 @@
 package com.cbt.client.device;
 
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.IDevice;
+import com.cbt.client.util.Utils;
+import com.cbt.client.ws.CbtWsClientException;
+import com.cbt.core.entity.Device;
+import com.cbt.jooq.enums.DeviceState;
+import com.google.inject.Inject;
+import org.apache.log4j.Logger;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
-import org.apache.log4j.Logger;
-
-import com.android.ddmlib.IDevice;
-import com.cbt.client.ws.CbtWsClientException;
-import com.cbt.core.entity.Device;
-import com.cbt.jooq.enums.DeviceState;
-import com.google.inject.Inject;
 
 /**
  * Class DeviceMonitor contains implementation for monitoring connected devices. It should be executed periodically on
@@ -35,17 +36,17 @@ public class DeviceMonitor implements Callable<Void> {
    }
 
    private static Logger logger = Logger.getLogger(DeviceMonitor.class);
+   private final Utils utils;
    private Callback callback;
    private Map<String, Device> devices;
-   private AdbWrapper adbBridge;
 
    /**
-    * Default constructor
+    * Constructor to set utils reference
     */
    @Inject
-   public DeviceMonitor(AdbWrapper adbWrapper) {
+   public DeviceMonitor(Utils utils) {
       this.devices = new HashMap<String, Device>();
-      this.adbBridge = adbWrapper;
+      this.utils = utils;
    }
 
    /**
@@ -74,7 +75,7 @@ public class DeviceMonitor implements Callable<Void> {
     */
    @Override
    public Void call() throws Exception {
-      Map<String, IDevice> allDevices = adbBridge.findAllDevices();
+      Map<String, IDevice> allDevices = utils.findAllDevices(AndroidDebugBridge.getBridge());
 
       // Update currently registered devices
       Set<String> allDeviceSerials = allDevices.keySet();

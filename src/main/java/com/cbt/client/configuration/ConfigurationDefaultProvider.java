@@ -1,12 +1,11 @@
 package com.cbt.client.configuration;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Named;
-
 import com.beust.jcommander.IDefaultProvider;
 import com.google.inject.Inject;
+
+import javax.inject.Named;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class ConfigurationDefaultProvider used for combining guice named binding injections with jcommander's

@@ -58,7 +58,8 @@ public class Main {
       }
 
       // Initialize adb
-      Utils.initAdb(parsedArgs.getSdk());
+      Utils utils = injector.getInstance(Utils.class);
+      utils.initAdb(parsedArgs.getSdk());
 
       // Start the client thread with supervision
       ExecutorService pool = Executors.newFixedThreadPool(CLIENT_THREAD_POOL_SIZE);
@@ -67,7 +68,7 @@ public class Main {
       SupervisorFactory.supervise(pool.submit(injector.getInstance(CbtClient.class)), true);
 
       // Terminate adb and stop
-      Utils.terminateAdb();
+      utils.terminateAdb();
       pool.shutdownNow();
       logger.info("Application finished");
    }

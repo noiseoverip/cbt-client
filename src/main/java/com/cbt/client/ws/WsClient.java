@@ -26,7 +26,7 @@ import java.util.Random;
 
 /**
  * Class WsClient
- * 
+ *
  * @author iljabobkevic 2013-10-02 initial version
  */
 public class WsClient {
@@ -48,11 +48,12 @@ public class WsClient {
       logger.debug("Cbt client using URL: " + serverUrl + " workspace: " + workspace);
    }
 
-   // TODO: this needs to be handled differently, large file might caused TIMEOUT ! Probably need to get rid of ZIP'ing
+   // TODO: this needs to be handled differently, large file might caused TIMEOUT ! Probably need to get rid of ZIP
    // on server side
+
    /**
     * Receive the package that contains tests to be executed
-    * 
+    *
     * @param jobId
     * @param deviceSerial
     * @throws CbtWsClientException
@@ -62,8 +63,10 @@ public class WsClient {
       logger.debug("Checking out files for job id: " + jobId + " workspace: " + workspace);
 
       // Fetch required files
-      ClientResponse response = getWebResource().path("testpackage.zip")
-            .queryParam("devicejobId", String.valueOf(jobId)).get(ClientResponse.class);
+      ClientResponse response = getWebResource()
+            .path("testpackage.zip")
+            .queryParam("devicejobId", String.valueOf(jobId))
+            .get(ClientResponse.class);
 
       File output = FileUtils.getFile(workspace, deviceSerial, String.valueOf(jobId));
       output.mkdirs();
@@ -88,7 +91,7 @@ public class WsClient {
 
    /**
     * Get client instance, instantiate and configure
-    * 
+    *
     * @return
     */
    private Client getClient() {
@@ -107,7 +110,7 @@ public class WsClient {
 
    /**
     * Helper method to construct request resource
-    * 
+    *
     * @return
     */
    private WebResource getWebResource() {
@@ -116,26 +119,29 @@ public class WsClient {
 
    /**
     * Get user by id map
-    * 
-    * @param name
-    *           - user name
+    *
+    * @param name - user name
     * @return
     */
    @SuppressWarnings("unchecked")
    public Map<String, Object> getUserByName(String name) {
-      // TODO: create/use required entities
+      //TODO: create/use required entities
 
       logger.debug("Getting user statistics");
 
-      ClientResponse response = getWebResource().path("user").queryParam("name", name)
-            .type(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+      ClientResponse response = getWebResource()
+            .path("user")
+            .queryParam("name", name)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.APPLICATION_JSON_TYPE)
+            .get(ClientResponse.class);
 
       return ClientResponse.Status.OK.getStatusCode() == response.getStatus() ? response.getEntity(Map.class) : null;
    }
 
    /**
     * Register defined device
-    * 
+    *
     * @param device
     * @return new device id or existing device id if already registered
     * @throws CbtWsClientException
@@ -143,26 +149,29 @@ public class WsClient {
    public long registerDevice(Device device) throws CbtWsClientException, ClientHandlerException {
       logger.debug("Registering device: " + device);
 
-      ClientResponse response = getWebResource().path("device").type(MediaType.APPLICATION_JSON_TYPE)
-            .accept(MediaType.TEXT_HTML).put(ClientResponse.class, device);
+      ClientResponse response = getWebResource()
+            .path("device")
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept(MediaType.TEXT_HTML)
+            .put(ClientResponse.class, device);
 
       switch (ClientResponse.Status.fromStatusCode(response.getStatus())) {
-      case OK:
-         logger.debug("Device register OK");
-         return Long.valueOf(response.getEntity(String.class));
-      case CONFLICT:
-         Device registeredDevice = response.getEntity(Device.class);
-         logger.debug("Device was already registered: " + registeredDevice);
-         return registeredDevice.getId();
-      default:
-         logger.debug("Device register failed");
-         throw new CbtWsClientException("Failed to register new device");
+         case OK:
+            logger.debug("Device register OK");
+            return Long.valueOf(response.getEntity(String.class));
+         case CONFLICT:
+            Device registeredDevice = response.getEntity(Device.class);
+            logger.debug("Device was already registered: " + registeredDevice);
+            return registeredDevice.getId();
+         default:
+            logger.debug("Device register failed");
+            throw new CbtWsClientException("Failed to register new device");
       }
    }
 
    /**
     * Update defined device information
-    * 
+    *
     * @param device
     * @throws CbtWsClientException
     * @throws ClientHandlerException
@@ -170,8 +179,11 @@ public class WsClient {
    public void updateDevice(Device device) throws CbtWsClientException, ClientHandlerException {
       logger.debug("Updating device: " + device);
 
-      ClientResponse response = getWebResource().path("device").path(device.getId().toString())
-            .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, device);
+      ClientResponse response = getWebResource()
+            .path("device")
+            .path(device.getId().toString())
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .post(ClientResponse.class, device);
 
       if (ClientResponse.Status.OK.getStatusCode() == response.getStatus()) {
          throw new CbtWsClientException("Failed to update device, response:" + response);
@@ -180,14 +192,17 @@ public class WsClient {
 
    /**
     * Send job results to the server
-    * 
+    *
     * @param result
     * @return
     * @throws CbtWsClientException
     */
    public DeviceJobResult publishDeviceJobResult(DeviceJobResult result) throws CbtWsClientException {
-      DeviceJobResult response = getWebResource().path("devicejob").path(result.getDevicejobId().toString())
-            .path("result").type(MediaType.APPLICATION_JSON_TYPE).put(DeviceJobResult.class, result);
+      DeviceJobResult response = getWebResource().path("devicejob")
+            .path(result.getDevicejobId().toString())
+            .path("result")
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .put(DeviceJobResult.class, result);
 
       if (response.getId() < 0) {
          throw new CbtWsClientException("Failed to publish device job result");
@@ -197,13 +212,17 @@ public class WsClient {
 
    /**
     * Sync (create if does not exit) device type with the server
-    * 
+    *
     * @param deviceType
     * @return
     */
    public DeviceType syncDeviceType(DeviceType deviceType) {
-      ClientResponse response = getWebResource().path("device").path("type").accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, deviceType);
+      ClientResponse response = getWebResource()
+            .path("device")
+            .path("type")
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .post(ClientResponse.class, deviceType);
 
       DeviceType deviceTypeSynced = null;
       logger.debug("Received response: " + response);
@@ -215,13 +234,15 @@ public class WsClient {
 
    /**
     * Get the job which is waiting in the queue to be executed
-    * 
+    *
     * @param device
     * @return
     */
    public DeviceJob getWaitingJob(Device device) {
-      ClientResponse response = getWebResource().path("devicejob").queryParam("deviceId", device.getId().toString())
-            .accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+      ClientResponse response = getWebResource().path("devicejob")
+            .queryParam("deviceId", device.getId().toString())
+            .accept(MediaType.APPLICATION_JSON)
+            .type(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
 
       DeviceJob job = null;
       logger.debug("Received response: " + response);

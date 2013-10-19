@@ -1,10 +1,9 @@
 package com.cbt.client.guice;
 
 import com.cbt.client.CbtClient;
-import com.cbt.client.configuration.Configuration;
-import com.cbt.client.configuration.ConfigurationImpl;
-import com.cbt.client.device.AdbWrapper;
 import com.cbt.client.device.DeviceMonitor;
+import com.cbt.client.device.DeviceWorker;
+import com.cbt.client.util.Utils;
 import com.cbt.client.ws.ClientAuthFilter;
 import com.cbt.client.ws.WsClient;
 import com.google.inject.AbstractModule;
@@ -23,9 +22,9 @@ public class GuiceModuleMain extends AbstractModule {
    protected void configure() {
       bind(CbtClient.class);
       bind(DeviceMonitor.class);
+      bind(DeviceWorker.class);
       bind(WsClient.class);
       bind(ClientAuthFilter.class).in(Singleton.class);
-      bind(Configuration.class).to(ConfigurationImpl.class).in(Singleton.class);
-      bind(AdbWrapper.class);
+      bind(Utils.class).in(Singleton.class);
    }
 }

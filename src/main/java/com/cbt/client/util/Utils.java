@@ -25,7 +25,7 @@ public class Utils {
    /**
     * Gson singleton instance for json serialization
     */
-   public static final Gson GSON = new GsonBuilder() //
+   public final Gson GSON = new GsonBuilder() //
          .registerTypeAdapter(File.class, new TypeAdapter<File>() {
             @Override
             public void write(JsonWriter jsonWriter, File file) throws IOException {
@@ -46,17 +46,11 @@ public class Utils {
          .create();
 
    /**
-    * No instances allowed
-    */
-   private Utils() {
-   }
-
-   /**
     * Wait for adb connection. Exception will be thrown in case of the timeout.
     *
     * @param adb
     */
-   private static void waitForAdb(AndroidDebugBridge adb) {
+   private void waitForAdb(AndroidDebugBridge adb) {
       int i = 1;
       try {
          while (!adb.isConnected() && i++ < 10) {
@@ -77,7 +71,7 @@ public class Utils {
     * @param sdk - android sdk path
     * @return
     */
-   public static AndroidDebugBridge initAdb(File sdk) {
+   public AndroidDebugBridge initAdb(File sdk) {
       AndroidDebugBridge.initIfNeeded(false);
       File adbPath = FileUtils.getFile(sdk, "platform-tools", "adb");
       AndroidDebugBridge adb = AndroidDebugBridge.createBridge(adbPath.getAbsolutePath(), true);
@@ -88,7 +82,7 @@ public class Utils {
    /**
     * Disconnect adb and terminate the server
     */
-   public static void terminateAdb() {
+   public void terminateAdb() {
       AndroidDebugBridge.disconnectBridge();
       AndroidDebugBridge.terminate();
    }
@@ -99,7 +93,7 @@ public class Utils {
     * @param adb
     * @return
     */
-   public static Map<String, IDevice> findAllDevices(AndroidDebugBridge adb) {
+   public Map<String, IDevice> findAllDevices(AndroidDebugBridge adb) {
       Map<String, IDevice> devices = new HashMap<String, IDevice>();
       for (IDevice realDevice : adb.getDevices()) {
          devices.put(realDevice.getSerialNumber(), realDevice);
