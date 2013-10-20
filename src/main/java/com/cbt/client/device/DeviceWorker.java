@@ -11,6 +11,7 @@ import com.cbt.jooq.enums.DeviceJobResultState;
 import com.cbt.jooq.enums.TestscriptTestscriptType;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
+import com.squareup.spoon.CbtSpoonRunner;
 import com.squareup.spoon.DeviceResult;
 import com.squareup.spoon.DeviceTestResult;
 import com.squareup.spoon.SpoonRunner;
@@ -123,7 +124,7 @@ public class DeviceWorker implements Callable<Void> {
       File spoonOutputPath = FileUtils.getFile(jobOutputPath, "spoon");
       logger.debug("Job output path: " + jobOutputPath);
       logger.debug("Spoon output path: " + spoonOutputPath);
-      SpoonRunner runner = new SpoonRunner.Builder()
+     CbtSpoonRunner runner = new CbtSpoonRunner.Builder()
             .setOutputDirectory(spoonOutputPath)
             .setApplicationApk(FileUtils.getFile(jobOutputPath, job.getTestTarget().getFileName()))
             .setInstrumentationApk(FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName()))
