@@ -23,7 +23,7 @@ final class CbtSpoonUtils {
    static AndroidDebugBridge initAdb(File sdk) {
       AndroidDebugBridge.initIfNeeded(false);
       File adbPath = FileUtils.getFile(sdk, "platform-tools", "adb");
-      // Forcing the bridge creation might cause problems trying to manage it externallyg
+      // Forcing the bridge creation might cause problems trying to manage it externally
       AndroidDebugBridge adb = AndroidDebugBridge.createBridge(adbPath.getAbsolutePath(), false);
       waitForAdb(adb);
       return adb;

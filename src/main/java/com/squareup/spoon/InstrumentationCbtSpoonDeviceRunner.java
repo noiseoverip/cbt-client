@@ -14,7 +14,7 @@ import static com.squareup.spoon.SpoonLogger.logInfo;
  *
  * @author iljabobkevic 2013-10-20 initial version
  */
-public class InstrumentationCbtSpoonDeviceRunner extends  AbstractCbtSpoonDeviceRunner {
+public class InstrumentationCbtSpoonDeviceRunner extends AbstractCbtSpoonDeviceRunner {
 
    /**
     * Create a test runner for a single device.
@@ -33,7 +33,9 @@ public class InstrumentationCbtSpoonDeviceRunner extends  AbstractCbtSpoonDevice
     *                            {@code className}.
     */
    InstrumentationCbtSpoonDeviceRunner(File sdk, File apk, File testApk, File output, String serial, boolean debug, boolean noAnimations, int adbTimeout, String classpath, SpoonInstrumentationInfo instrumentationInfo, String className, String methodName, IRemoteAndroidTestRunner.TestSize testSize, boolean disableScreenshot) {
-      super(sdk, apk, testApk, output, serial, debug, noAnimations, adbTimeout, classpath, instrumentationInfo, className, methodName, testSize, disableScreenshot);
+      super(sdk, apk, output, serial, debug, noAnimations, adbTimeout, classpath, className, methodName, testSize, disableScreenshot);
+      setTestApk(testApk);
+      setInstrumentationInfo(instrumentationInfo);
    }
 
    @Override

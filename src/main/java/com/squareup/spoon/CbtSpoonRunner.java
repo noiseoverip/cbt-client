@@ -35,7 +35,7 @@ public final class CbtSpoonRunner {
       private String title = DEFAULT_TITLE;
       private File androidSdk;
       private File applicationApk;
-      private File instrumentationApk;
+      private File[] instrumentationApks;
       private File output;
       private boolean debug = false;
       private Set<String> serials;
@@ -84,10 +84,12 @@ public final class CbtSpoonRunner {
       /**
        * Path to instrumentation APK.
        */
-      public Builder setInstrumentationApk(File apk) {
-         checkNotNull(apk, "Instrumentation APK path not specified.");
-         checkArgument(apk.exists(), "Instrumentation APK path does not exist.");
-         this.instrumentationApk = apk;
+      public Builder setInstrumentationApks(File... apks) {
+         checkNotNull(apks, "Instrumentation APK path not specified.");
+         for (File apk : apks) {
+            checkArgument(apk.exists(), "Instrumentation APK path does not exist: " + apk);
+         }
+         this.instrumentationApks = apks;
          return this;
       }
 
@@ -180,7 +182,7 @@ public final class CbtSpoonRunner {
          checkNotNull(androidSdk, "SDK is required.");
          checkArgument(androidSdk.exists(), "SDK path does not exist.");
          checkNotNull(applicationApk, "Application APK is required.");
-         checkNotNull(instrumentationApk, "Instrumentation APK is required.");
+         checkNotNull(instrumentationApks, "Instrumentation APK is required.");
          checkNotNull(output, "Output path is required.");
          checkNotNull(serials, "Device serials are required.");
          if (!Strings.isNullOrEmpty(methodName)) {
@@ -188,7 +190,7 @@ public final class CbtSpoonRunner {
                   "Must specify class name if you're specifying a method name.");
          }
 
-         return new CbtSpoonRunner(title, androidSdk, applicationApk, instrumentationApk, output, debug,
+         return new CbtSpoonRunner(title, androidSdk, applicationApk, instrumentationApks, output, debug,
                noAnimations, adbTimeout, serials, classpath, className, methodName, testSize, disableHtml,
                disableScreenshot, uiAutomator, keepAdb, testRunner);
       }
@@ -223,7 +225,7 @@ public final class CbtSpoonRunner {
    private final String title;
    private final File androidSdk;
    private final File applicationApk;
-   private final File instrumentationApk;
+   private final File[] instrumentationApks;
    private final File output;
    private final boolean debug;
    private final boolean noAnimations;
@@ -239,7 +241,7 @@ public final class CbtSpoonRunner {
    private final boolean keepAdb;
    private final String testRunner;
 
-   private CbtSpoonRunner(String title, File androidSdk, File applicationApk, File instrumentationApk,
+   private CbtSpoonRunner(String title, File androidSdk, File applicationApk, File[] instrumentationApks,
                           File output, boolean debug, boolean noAnimations, int adbTimeout, Set<String> serials, String classpath,
                           String className, String methodName, IRemoteAndroidTestRunner.TestSize testSize,
                           boolean disableHtml, boolean disableScreenshot, boolean uiAutomator, boolean keepAdb,
@@ -247,7 +249,7 @@ public final class CbtSpoonRunner {
       this.title = title;
       this.androidSdk = androidSdk;
       this.applicationApk = applicationApk;
-      this.instrumentationApk = instrumentationApk;
+      this.instrumentationApks = instrumentationApks;
       this.output = output;
       this.debug = debug;
       this.noAnimations = noAnimations;
@@ -297,7 +299,6 @@ public final class CbtSpoonRunner {
     */
    public boolean run() {
       checkArgument(applicationApk.exists(), "Could not find application APK.");
-      checkArgument(instrumentationApk.exists(), "Could not find instrumentation APK.");
 
       AndroidDebugBridge adb = CbtSpoonUtils.initAdb(androidSdk);
 
@@ -336,31 +337,35 @@ public final class CbtSpoonRunner {
          throw new RuntimeException("Unable to clean output directory: " + output, e);
       }
 
-      final SpoonInstrumentationInfo testInfo;
-      if (uiAutomator) {
-         testInfo = new SpoonInstrumentationInfo(applicationApk.getName(),
-               instrumentationApk.getName(), testRunner);
-      } else {
-         testInfo = parseFromFile(instrumentationApk);
-      }
-
-      logDebug(debug, "Application: %s from %s", testInfo.getApplicationPackage(),
-            applicationApk.getAbsolutePath());
-      logDebug(debug, "Instrumentation: %s from %s", testInfo.getInstrumentationPackage(),
-            instrumentationApk.getAbsolutePath());
-
       final SpoonSummary.Builder summary = new SpoonSummary.Builder().setTitle(title).start();
 
       if (testSize != null) {
          summary.setTestSize(testSize);
       }
 
+      final SpoonInstrumentationInfo testInfo[] = new SpoonInstrumentationInfo[instrumentationApks.length];
+      for (int i = 0; i < instrumentationApks.length; i++) {
+         if (uiAutomator) {
+            testInfo[i] = new SpoonInstrumentationInfo(applicationApk.getName(),
+                  instrumentationApks[i].getName(), testRunner);
+         } else {
+            testInfo[i] = parseFromFile(instrumentationApks[i]);
+         }
+         logDebug(debug, "Instrumentation: %s from %s", testInfo[i].getInstrumentationPackage(),
+               instrumentationApks[i].getAbsolutePath());
+      }
+
+      logDebug(debug, "Application: %s from %s", testInfo[0].getApplicationPackage(),
+            applicationApk.getAbsolutePath());
+
       if (targetCount == 1) {
          // Since there is only one device just execute it synchronously in this process.
          String serial = serials.iterator().next();
          try {
             logDebug(debug, "[%s] Starting execution.", serial);
-            summary.addResult(serial, getTestRunner(serial, testInfo).run(adb));
+            for (AbstractCbtSpoonDeviceRunner testRunner : getTestRunner(serial, testInfo)) {
+               summary.addResult(serial, testRunner.run(adb));
+            }
          } catch (Exception e) {
             logDebug(debug, "[%s] Execution exception!", serial);
             e.printStackTrace(System.out);
@@ -377,15 +382,17 @@ public final class CbtSpoonRunner {
             new Thread(new Runnable() {
                @Override
                public void run() {
-                  try {
-                     summary.addResult(serial, getTestRunner(serial, testInfo).runInNewProcess());
-                  } catch (Exception e) {
-                     summary.addResult(serial, new DeviceResult.Builder().addException(e).build());
-                  } finally {
-                     done.countDown();
-                     remaining.remove(serial);
-                     logDebug(debug, "[%s] Execution done. (%s remaining %s)", serial, done.getCount(),
-                           remaining);
+                  for (AbstractCbtSpoonDeviceRunner testRunner : getTestRunner(serial, testInfo)) {
+                     try {
+                        summary.addResult(serial, testRunner.runInNewProcess());
+                     } catch (Exception e) {
+                        summary.addResult(serial, new DeviceResult.Builder().addException(e).build());
+                     } finally {
+                        done.countDown();
+                        remaining.remove(serial);
+                        logDebug(debug, "[%s] Execution done. (%s remaining %s)", serial, done.getCount(),
+                              remaining);
+                     }
                   }
                }
             }).start();
@@ -409,16 +416,24 @@ public final class CbtSpoonRunner {
       return summary.end().build();
    }
 
-   private AbstractCbtSpoonDeviceRunner getTestRunner(String serial, SpoonInstrumentationInfo testInfo) {
-      AbstractCbtSpoonDeviceRunner result;
+   private AbstractCbtSpoonDeviceRunner[] getTestRunner(String serial, SpoonInstrumentationInfo[] testInfo) {
+      AbstractCbtSpoonDeviceRunner[] result;
       if (uiAutomator) {
-         result = new UiAutomatorCbtSpoonDeviceRunner(androidSdk, applicationApk, instrumentationApk, output, serial,
-               debug, noAnimations, adbTimeout, classpath, testInfo, className, methodName, testSize,
-               disableScreenshot);
+         result = new AbstractCbtSpoonDeviceRunner[]{new UiAutomatorCbtSpoonDeviceRunner(androidSdk, applicationApk,
+               output,
+               serial,
+               debug, noAnimations, adbTimeout, classpath, className, methodName, testSize,
+               disableScreenshot).setTestApk(instrumentationApks).setInstrumentationInfo(testInfo)};
       } else {
-         result = new InstrumentationCbtSpoonDeviceRunner(androidSdk, applicationApk, instrumentationApk, output, serial,
-               debug, noAnimations, adbTimeout, classpath, testInfo, className, methodName, testSize,
-               disableScreenshot);
+         result = new AbstractCbtSpoonDeviceRunner[instrumentationApks.length];
+         for (int i = 0; i < instrumentationApks.length; i++) {
+            result[i] = new InstrumentationCbtSpoonDeviceRunner(androidSdk, applicationApk, instrumentationApks[i],
+                  output,
+                  serial,
+                  debug, noAnimations, adbTimeout, classpath, testInfo[i], className, methodName, testSize,
+                  disableScreenshot);
+         }
+
       }
       return result;
    }

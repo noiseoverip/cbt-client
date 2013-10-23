@@ -50,7 +50,6 @@ public abstract class AbstractCbtSpoonDeviceRunner {
    protected static final String FAILED_INSTALLATION_MSG = "Unable to install application APK.";
    private final File sdk;
    private final File apk;
-   private final File testApk;
    private final String serial;
    private final boolean debug;
    private final boolean noAnimations;
@@ -62,32 +61,29 @@ public abstract class AbstractCbtSpoonDeviceRunner {
    private final File work;
    private final File junitReport;
    private final String classpath;
-   private final SpoonInstrumentationInfo instrumentationInfo;
    private final boolean disableScreenshot;
+   private SpoonInstrumentationInfo[] instrumentationInfo;
+   private File[] testApk;
 
    /**
     * Create a test runner for a single device.
     *
-    * @param sdk                 Path to the local Android SDK directory.
-    * @param apk                 Path to application APK.
-    * @param testApk             Path to test application APK.
-    * @param output              Path to output directory.
-    * @param serial              Device to run the test on.
-    * @param debug               Whether or not debug logging is enabled.
-    * @param adbTimeout          time in ms for longest test execution
-    * @param classpath           Custom JVM classpath or {@code null}.
-    * @param instrumentationInfo Test apk manifest information.
-    * @param className           Test class name to run or {@code null} to run all tests.
-    * @param methodName          Test method name to run or {@code null} to run all tests.  Must also pass
-    *                            {@code className}.
+    * @param sdk        Path to the local Android SDK directory.
+    * @param apk        Path to application APK.
+    * @param output     Path to output directory.
+    * @param serial     Device to run the test on.
+    * @param debug      Whether or not debug logging is enabled.
+    * @param adbTimeout time in ms for longest test execution
+    * @param classpath  Custom JVM classpath or {@code null}.
+    * @param className  Test class name to run or {@code null} to run all tests.
+    * @param methodName Test method name to run or {@code null} to run all tests.  Must also pass
+    *                   {@code className}.
     */
-   AbstractCbtSpoonDeviceRunner(File sdk, File apk, File testApk, File output, String serial, boolean debug,
-                                boolean noAnimations, int adbTimeout, String classpath,
-                                SpoonInstrumentationInfo instrumentationInfo, String className, String methodName,
+   AbstractCbtSpoonDeviceRunner(File sdk, File apk, File output, String serial, boolean debug,
+                                boolean noAnimations, int adbTimeout, String classpath, String className, String methodName,
                                 IRemoteAndroidTestRunner.TestSize testSize, boolean disableScreenshot) {
       this.sdk = sdk;
       this.apk = apk;
-      this.testApk = testApk;
       this.serial = serial;
       this.debug = debug;
       this.noAnimations = noAnimations;
@@ -99,7 +95,6 @@ public abstract class AbstractCbtSpoonDeviceRunner {
       this.work = FileUtils.getFile(output, TEMP_DIR, serial);
       this.junitReport = FileUtils.getFile(output, JUNIT_DIR, serial + ".xml");
       this.classpath = classpath;
-      this.instrumentationInfo = instrumentationInfo;
       this.disableScreenshot = disableScreenshot;
    }
 
@@ -136,6 +131,28 @@ public abstract class AbstractCbtSpoonDeviceRunner {
          ex.printStackTrace(System.out);
          System.exit(1);
       }
+   }
+
+   /**
+    * Set path to test application APK.
+    *
+    * @param testApk
+    * @return this object
+    */
+   public AbstractCbtSpoonDeviceRunner setTestApk(File... testApk) {
+      this.testApk = testApk;
+      return this;
+   }
+
+   /**
+    * Set test apk manifest information.
+    *
+    * @param instrumentationInfo
+    * @return this object
+    */
+   public AbstractCbtSpoonDeviceRunner setInstrumentationInfo(SpoonInstrumentationInfo... instrumentationInfo) {
+      this.instrumentationInfo = instrumentationInfo;
+      return this;
    }
 
    /**
@@ -187,9 +204,14 @@ public abstract class AbstractCbtSpoonDeviceRunner {
     * Execute instrumentation on the target device and return a result summary.
     */
    public DeviceResult run(AndroidDebugBridge adb) {
-      String appPackage = instrumentationInfo.getApplicationPackage();
-      String testPackage = instrumentationInfo.getInstrumentationPackage();
-      String testRunner = instrumentationInfo.getTestRunnerClass();
+      String appPackage = instrumentationInfo[0].getApplicationPackage();
+      String testRunner = instrumentationInfo[0].getTestRunnerClass();
+      StringBuilder testPackageBuilder = new StringBuilder(instrumentationInfo[0].getInstrumentationPackage());
+      for (int i = 1; i < instrumentationInfo.length; i++) {
+         testPackageBuilder.append(" ").append(instrumentationInfo[i].getInstrumentationPackage());
+      }
+      String testPackage = testPackageBuilder.toString();
+
       logDebug(debug, "InstrumentationInfo: [%s]", instrumentationInfo);
 
       if (debug) {
@@ -208,7 +230,9 @@ public abstract class AbstractCbtSpoonDeviceRunner {
 
       try {
          installAppPackage(device);
-         installTestPackage(device, testApk);
+         for (File apk : testApk) {
+            installTestPackage(device, apk);
+         }
       } catch (InstallException e) {
          e.printStackTrace(System.out);
          return result.markInstallAsFailed(e.getMessage()).build();
@@ -276,7 +300,8 @@ public abstract class AbstractCbtSpoonDeviceRunner {
 
    protected abstract void installTestPackage(IDevice device, File testApk) throws InstallException;
 
-   protected abstract IRemoteAndroidTestRunner getRemoteTestRunner(String testPackage, String testRunner, IDevice device);
+   protected abstract IRemoteAndroidTestRunner getRemoteTestRunner(String testPackage, String testRunner,
+                                                                   IDevice device);
 
    protected String getSerial() {
       return serial;

@@ -180,6 +180,7 @@ public class RemoteUiAutomatorTestRunner implements IRemoteAndroidTestRunner {
          IOException {
       final String runCaseCommandStr = String.format("uiautomator runtest %1$s %2$s %3$s",
             getPackageName(), getArgsCommand(), getRunnerCommand());
+      System.out.println(runCaseCommandStr); //TODO: REMOVE ME
       Log.i(LOG_TAG, String.format("Running %1$s on %2$s", runCaseCommandStr,
             mRemoteDevice.getName()));
       String runName = mRunName == null ? mPackageName : mRunName;

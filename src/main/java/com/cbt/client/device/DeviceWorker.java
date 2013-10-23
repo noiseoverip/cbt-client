@@ -1,7 +1,7 @@
 package com.cbt.client.device;
 
+import com.android.ddmlib.logcat.LogCatMessage;
 import com.cbt.client.configuration.Configuration;
-import com.cbt.client.util.MultipleOutputWriter;
 import com.cbt.client.util.Utils;
 import com.cbt.client.ws.WsClient;
 import com.cbt.core.entity.Device;
@@ -13,18 +13,20 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.squareup.spoon.CbtSpoonRunner;
 import com.squareup.spoon.DeviceResult;
+import com.squareup.spoon.DeviceTest;
 import com.squareup.spoon.DeviceTestResult;
-import com.squareup.spoon.SpoonRunner;
 import com.squareup.spoon.SpoonSummary;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -36,6 +38,8 @@ import java.util.concurrent.Callable;
 public class DeviceWorker implements Callable<Void> {
 
    static final String DEVICE_TITLE_FREE = "FREE";
+   static final String TEST_RUNNER_JAR = "testrunner.jar";
+   static final String TEST_RUNNER_CLASS = "com.cbt.testrunner.uiautomator.SpoonUiAutomatorTestRunner";
    private final Configuration config;
    private final Logger logger = Logger.getLogger(DeviceWorker.class);
    private final WsClient wsClient;
@@ -71,6 +75,16 @@ public class DeviceWorker implements Callable<Void> {
             boolean isUiAutomator = false;
             if (TestscriptTestscriptType.UIAUTOMATOR.equals(job.getTestScript().getTestScriptType())) {
                isUiAutomator = true;
+               File testrunner = FileUtils.getFile(config.getWorkspace(), TEST_RUNNER_JAR);
+               if (!testrunner.exists()) {
+                  InputStream is = DeviceWorker.class.getResourceAsStream("/" + TEST_RUNNER_JAR);
+                  if (null != is) {
+                     Files.copy(is, testrunner.toPath());
+                     logger.debug("Wrote file: " + testrunner);
+                  } else {
+                     logger.error("Failed writing " + TEST_RUNNER_JAR);
+                  }
+               }
             }
 
             DeviceJobResult result = runTest(device, job, isUiAutomator);
@@ -124,40 +138,39 @@ public class DeviceWorker implements Callable<Void> {
       File spoonOutputPath = FileUtils.getFile(jobOutputPath, "spoon");
       logger.debug("Job output path: " + jobOutputPath);
       logger.debug("Spoon output path: " + spoonOutputPath);
-     CbtSpoonRunner runner = new CbtSpoonRunner.Builder()
+      CbtSpoonRunner runner = new CbtSpoonRunner.Builder()
             .setOutputDirectory(spoonOutputPath)
             .setApplicationApk(FileUtils.getFile(jobOutputPath, job.getTestTarget().getFileName()))
-            .setInstrumentationApk(FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName()))
+            .setInstrumentationApks(isUiAutomator ? FileUtils.getFile(config.getWorkspace(), TEST_RUNNER_JAR) : null,
+                  FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName()))
             .setDisableHtml(true)
             .setDisableScreenshot(true)
             .setUiAutomator(isUiAutomator)
+            .setTestRunner(isUiAutomator ? TEST_RUNNER_CLASS : null)
             .setAndroidSdk(config.getSdk())
             .setClassName(Joiner.on(",").join(job.getMetadata().getTestClasses()))
             .addDevice(device.getSerialNumber())
             .setKeepAdb(true)
             .setDebug(true).build(); // config.isDebug()
 
-      PrintStream origOut = System.out;
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      MultipleOutputWriter multiOut = new MultipleOutputWriter(baos, origOut);
-
-      PrintStream interceptor = new PrintStream(multiOut);
-      System.setOut(interceptor);
-
       runner.run();
-
-      System.out.flush();
-      System.setOut(origOut);
-
-      baos.close();
 
       logger.info("Read the result from a file in the output directory.");
       FileReader resultFile = new FileReader(FileUtils.getFile(spoonOutputPath, "result.json"));
       SpoonSummary spoonSummary = utils.GSON.fromJson(resultFile, SpoonSummary.class);
       resultFile.close();
 
+      StringBuilder outputBuilder = new StringBuilder();
+      Set<Map.Entry<DeviceTest, DeviceTestResult>> deviceResultEntries = spoonSummary.getResults().get(device.getSerialNumber()).getTestResults().entrySet();
+      for (Map.Entry<DeviceTest, DeviceTestResult> entry : deviceResultEntries) {
+         outputBuilder.append("--------------------").append(System.lineSeparator());
+         for (LogCatMessage message : entry.getValue().getLog()) {
+            outputBuilder.append(message).append(System.lineSeparator());
+         }
+      }
+
       DeviceJobResult jobResult = parseJobResult(spoonSummary);
-      jobResult.setOutput(baos.toString());
+      jobResult.setOutput(outputBuilder.toString());
       jobResult.setDevicejobId(job.getId());
 
       return jobResult;

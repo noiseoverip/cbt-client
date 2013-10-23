@@ -8,6 +8,7 @@ import com.cbt.core.entity.DeviceJob;
 import com.cbt.core.entity.DeviceJobResult;
 import com.cbt.core.entity.TestScript;
 import com.cbt.jooq.enums.TestscriptTestscriptType;
+import com.google.common.io.Files;
 import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.junit.Before;
@@ -56,6 +57,7 @@ public class DeviceWorkerTest {
    @Test
    public void testCall() throws Exception {
       DeviceWorker worker = spy(new DeviceWorker(conf, wsClient, utils));
+      when(conf.getWorkspace()).thenReturn(Files.createTempDir());
       DeviceJobResult deviceJobResult = mock(DeviceJobResult.class);
       doReturn(deviceJobResult).when(worker).runTest(any(Device.class), any(DeviceJob.class), anyBoolean());
 

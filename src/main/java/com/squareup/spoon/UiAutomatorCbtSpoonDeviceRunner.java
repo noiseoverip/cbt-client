@@ -18,21 +18,20 @@ public class UiAutomatorCbtSpoonDeviceRunner extends AbstractCbtSpoonDeviceRunne
    /**
     * Create a test runner for a single device.
     *
-    * @param sdk                 Path to the local Android SDK directory.
-    * @param apk                 Path to application APK.
-    * @param testApk             Path to test application APK.
-    * @param output              Path to output directory.
-    * @param serial              Device to run the test on.
-    * @param debug               Whether or not debug logging is enabled.
-    * @param adbTimeout          time in ms for longest test execution
-    * @param classpath           Custom JVM classpath or {@code null}.
-    * @param instrumentationInfo Test apk manifest information.
-    * @param className           Test class name to run or {@code null} to run all tests.
-    * @param methodName          Test method name to run or {@code null} to run all tests.  Must also pass
-    *                            {@code className}.
+    * @param sdk        Path to the local Android SDK directory.
+    * @param apk        Path to application APK.
+    * @param output     Path to output directory.
+    * @param serial     Device to run the test on.
+    * @param debug      Whether or not debug logging is enabled.
+    * @param adbTimeout time in ms for longest test execution
+    * @param classpath  Custom JVM classpath or {@code null}.
+    * @param className  Test class name to run or {@code null} to run all tests.
+    * @param methodName Test method name to run or {@code null} to run all tests.  Must also pass
+    *                   {@code className}.
     */
-   UiAutomatorCbtSpoonDeviceRunner(File sdk, File apk, File testApk, File output, String serial, boolean debug, boolean noAnimations, int adbTimeout, String classpath, SpoonInstrumentationInfo instrumentationInfo, String className, String methodName, IRemoteAndroidTestRunner.TestSize testSize, boolean disableScreenshot) {
-      super(sdk, apk, testApk, output, serial, debug, noAnimations, adbTimeout, classpath, instrumentationInfo, className, methodName, testSize, disableScreenshot);
+   UiAutomatorCbtSpoonDeviceRunner(File sdk, File apk, File output, String serial, boolean debug, boolean noAnimations, int adbTimeout, String classpath, String className, String methodName, IRemoteAndroidTestRunner.TestSize testSize, boolean disableScreenshot) {
+      super(sdk, apk, output, serial, debug, noAnimations, adbTimeout, classpath, className, methodName, testSize, disableScreenshot);
+
    }
 
    @Override
@@ -45,8 +44,8 @@ public class UiAutomatorCbtSpoonDeviceRunner extends AbstractCbtSpoonDeviceRunne
    }
 
    @Override
-   protected IRemoteAndroidTestRunner getRemoteTestRunner(String testPackage, String testRunner, IDevice device) {
-      return new RemoteUiAutomatorTestRunner(testPackage, testRunner, device);
+   protected IRemoteAndroidTestRunner getRemoteTestRunner(String testPackge, String testRunner, IDevice device) {
+      return new RemoteUiAutomatorTestRunner(testPackge, testRunner, device);
    }
 
 }
