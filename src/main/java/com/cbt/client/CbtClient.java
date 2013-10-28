@@ -9,7 +9,7 @@ import com.cbt.client.ws.CbtWsClientException;
 import com.cbt.client.ws.WsClient;
 import com.cbt.core.entity.Device;
 import com.cbt.core.entity.DeviceType;
-import com.cbt.jooq.enums.DeviceState;
+import com.cbt.jooq.enums.DeviceDeviceState;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -30,6 +30,63 @@ import java.util.concurrent.TimeUnit;
 public class CbtClient implements Callable<Boolean> {
 
    /**
+    * {@link com.cbt.client.device.DeviceMonitor.Callback} implementation
+    */
+   public class DeviceMonitorCallback implements DeviceMonitor.Callback {
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public Device deviceOnline(IDevice device) throws CbtWsClientException {
+         logger.info("Registering device: " + device);
+         Device cbtDevice = new Device();
+         cbtDevice.setOwnerId(config.getUserId());
+         cbtDevice.setSerialNumber(device.getSerialNumber());
+         cbtDevice.setState(DeviceDeviceState.ONLINE);
+         DeviceType deviceType = new DeviceType();
+         deviceType.setManufacture(device.getProperty("ro.product.manufacturer"));
+         deviceType.setModel(device.getProperty("ro.product.model"));
+         if (null != deviceType) {
+            DeviceType deviceTypeSynced = wsClient.syncDeviceType(deviceType);
+            cbtDevice.setDeviceTypeId(deviceTypeSynced.getId());
+            cbtDevice.setDeviceOsId(1L);
+         }
+         Long deviceId = wsClient.registerDevice(cbtDevice);
+         cbtDevice.setId(deviceId);
+         return cbtDevice;
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void deviceUpdate(Device device) {
+         try {
+            wsClient.updateDevice(device);
+         } catch (CbtWsClientException e) {
+            logger.error("Could not update device:" + device);
+         } catch (ClientHandlerException connectionException) {
+            logger.error("Connection problem", connectionException);
+         }
+      }
+
+      /**
+       * {@inheritDoc}
+       */
+      @Override
+      public void deviceWorker(Device device) {
+         // TODO: Introduce busy concept
+         synchronized (device) {
+            device.setTitle(DEVICE_TITLE_BUSY);
+         }
+         DeviceWorker worker = injector.getInstance(DeviceWorker.class);
+         worker.setDevice(device);
+         SupervisorFactory.supervise(deviceWorkerExecutor.schedule(worker, WORKER_SCHEDULE_DELAY, TimeUnit.SECONDS));
+      }
+   }
+
+   /**
     * Number of simultaneous device worker threads. Should be equal to most probable device count.
     */
    private static final int WORKER_MAX_THREAD = 10;
@@ -46,7 +103,6 @@ public class CbtClient implements Callable<Boolean> {
     * How ofter device monitoring threads should be called in seconds
     */
    private static final int MONITOR_SCHEDULE_DELAY = 10;
-
    /**
     * Device title to be set when device is used for the job
     */
@@ -123,63 +179,5 @@ public class CbtClient implements Callable<Boolean> {
          result = false;
       }
       return result;
-   }
-
-   /**
-    * {@link com.cbt.client.device.DeviceMonitor.Callback} implementation
-    */
-   public class DeviceMonitorCallback implements DeviceMonitor.Callback {
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public Device deviceOnline(IDevice device) throws CbtWsClientException {
-         logger.info("Registering device: " + device);
-         Device cbtDevice = new Device();
-         cbtDevice.setUserId(config.getUserId());
-         cbtDevice.setOwnerId(config.getUserId());
-         cbtDevice.setSerialNumber(device.getSerialNumber());
-         cbtDevice.setState(DeviceState.ONLINE);
-         DeviceType deviceType = new DeviceType();
-         deviceType.setManufacture(device.getProperty("ro.product.manufacturer"));
-         deviceType.setModel(device.getProperty("ro.product.model"));
-         if (null != deviceType) {
-            DeviceType deviceTypeSynced = wsClient.syncDeviceType(deviceType);
-            cbtDevice.setDeviceTypeId(deviceTypeSynced.getId());
-            cbtDevice.setDeviceOsId(1L);
-         }
-         Long deviceId = wsClient.registerDevice(cbtDevice);
-         cbtDevice.setId(deviceId);
-         return cbtDevice;
-      }
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public void deviceUpdate(Device device) {
-         try {
-            wsClient.updateDevice(device);
-         } catch (CbtWsClientException e) {
-            logger.error("Could not update device:" + device);
-         } catch (ClientHandlerException connectionException) {
-            logger.error("Connection problem", connectionException);
-         }
-      }
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public void deviceWorker(Device device) {
-         // TODO: Introduce busy concept
-         synchronized (device) {
-            device.setTitle(DEVICE_TITLE_BUSY);
-         }
-         DeviceWorker worker = injector.getInstance(DeviceWorker.class);
-         worker.setDevice(device);
-         SupervisorFactory.supervise(deviceWorkerExecutor.schedule(worker, WORKER_SCHEDULE_DELAY, TimeUnit.SECONDS));
-      }
    }
 }

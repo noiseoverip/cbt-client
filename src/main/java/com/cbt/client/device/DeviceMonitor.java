@@ -5,7 +5,7 @@ import com.android.ddmlib.IDevice;
 import com.cbt.client.util.Utils;
 import com.cbt.client.ws.CbtWsClientException;
 import com.cbt.core.entity.Device;
-import com.cbt.jooq.enums.DeviceState;
+import com.cbt.jooq.enums.DeviceDeviceState;
 import com.google.inject.Inject;
 import org.apache.log4j.Logger;
 
@@ -84,7 +84,7 @@ public class DeviceMonitor implements Callable<Void> {
          Device cbtDevice = devices.get(serial);
          if (!allDeviceSerials.contains(serial)) {
             devices.remove(serial);
-            cbtDevice.setState(DeviceState.OFFLINE);
+            cbtDevice.setState(DeviceDeviceState.OFFLINE);
          }
 
          callback.deviceUpdate(cbtDevice);

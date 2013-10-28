@@ -82,14 +82,14 @@ public class DeviceWorker implements Callable<Void> {
                      Files.copy(is, testrunner.toPath());
                      logger.debug("Wrote file: " + testrunner);
                   } else {
-                     logger.error("Failed writing " + TEST_RUNNER_JAR);
+                     logger.error("Failed writing: " + TEST_RUNNER_JAR);
                   }
                }
             }
 
             DeviceJobResult result = runTest(device, job, isUiAutomator);
 
-            logger.info("Publishing results:" + result);
+            logger.info("Publishing results: " + result);
             wsClient.publishDeviceJobResult(result);
          } else {
             logger.info("No jobs found");
@@ -163,7 +163,6 @@ public class DeviceWorker implements Callable<Void> {
       StringBuilder outputBuilder = new StringBuilder();
       Set<Map.Entry<DeviceTest, DeviceTestResult>> deviceResultEntries = spoonSummary.getResults().get(device.getSerialNumber()).getTestResults().entrySet();
       for (Map.Entry<DeviceTest, DeviceTestResult> entry : deviceResultEntries) {
-         outputBuilder.append("--------------------").append(System.lineSeparator());
          for (LogCatMessage message : entry.getValue().getLog()) {
             outputBuilder.append(message).append(System.lineSeparator());
          }

@@ -8,7 +8,7 @@ import com.cbt.client.ws.CbtWsClientException;
 import com.cbt.client.ws.WsClient;
 import com.cbt.core.entity.Device;
 import com.cbt.core.entity.DeviceType;
-import com.cbt.jooq.enums.DeviceState;
+import com.cbt.jooq.enums.DeviceDeviceState;
 import com.google.inject.Injector;
 import com.sun.jersey.api.client.ClientHandlerException;
 import org.junit.Assert;
@@ -91,10 +91,9 @@ public class CbtClientTest {
       Device device = callback.deviceOnline(idevice);
 
       Assert.assertNotNull("Device object should NOT be null", device);
-      Assert.assertEquals("Wrong user id!", Long.valueOf(device.getUserId()), Long.valueOf(DUMMY_ID));
       Assert.assertEquals("Wrong owner id!", Long.valueOf(device.getOwnerId()), Long.valueOf(DUMMY_ID));
       Assert.assertEquals("Wrong serial number!", device.getSerialNumber(), DUMMY_VALUE);
-      Assert.assertEquals("Wrong device state!", device.getState(), DeviceState.ONLINE);
+      Assert.assertEquals("Wrong device state!", device.getState(), DeviceDeviceState.ONLINE);
       Assert.assertEquals("Wrong device os id!", Long.valueOf(device.getDeviceOsId()), Long.valueOf(1L));
       Assert.assertEquals("Wrong device type id!", Long.valueOf(device.getDeviceTypeId()), Long.valueOf(DUMMY_ID));
       Assert.assertEquals("Wrong device id!", Long.valueOf(device.getId()), Long.valueOf(DUMMY_ID));
@@ -146,4 +145,4 @@ public class CbtClientTest {
       Assert.assertTrue("Authentication should return true if user properties are set", client.authenticate());
    }
 
-} 
+}
