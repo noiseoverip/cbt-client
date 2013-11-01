@@ -87,6 +87,7 @@ public final class CbtSpoonRunner {
       public Builder setInstrumentationApks(File... apks) {
          checkNotNull(apks, "Instrumentation APK path not specified.");
          for (File apk : apks) {
+            checkNotNull(apk, "Instrumentation APK path not specified.");
             checkArgument(apk.exists(), "Instrumentation APK path does not exist: " + apk);
          }
          this.instrumentationApks = apks;

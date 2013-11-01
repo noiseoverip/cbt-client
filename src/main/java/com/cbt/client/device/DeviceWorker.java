@@ -138,11 +138,19 @@ public class DeviceWorker implements Callable<Void> {
       File spoonOutputPath = FileUtils.getFile(jobOutputPath, "spoon");
       logger.debug("Job output path: " + jobOutputPath);
       logger.debug("Spoon output path: " + spoonOutputPath);
+
+      File[] testArtficats;
+      if (isUiAutomator) {
+         testArtficats = new File[]{FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName()),
+               FileUtils.getFile(config.getWorkspace(), TEST_RUNNER_JAR)};
+      } else {
+         testArtficats = new File[]{FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName())};
+      }
+
       CbtSpoonRunner runner = new CbtSpoonRunner.Builder()
             .setOutputDirectory(spoonOutputPath)
             .setApplicationApk(FileUtils.getFile(jobOutputPath, job.getTestTarget().getFileName()))
-            .setInstrumentationApks(isUiAutomator ? FileUtils.getFile(config.getWorkspace(), TEST_RUNNER_JAR) : null,
-                  FileUtils.getFile(jobOutputPath, job.getTestScript().getFileName()))
+            .setInstrumentationApks(testArtficats)
             .setDisableHtml(true)
             .setDisableScreenshot(true)
             .setUiAutomator(isUiAutomator)

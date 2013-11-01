@@ -12,9 +12,9 @@ public class MainST {
    /**
     * Method: main(String... args). Time out after 2 minutes
     */
-   @Test(timeout = 120000L)
+   @Test(timeout = 300000L)
    public void testMain() throws Exception {
       Main.main();
    }
 
-} 
+}
