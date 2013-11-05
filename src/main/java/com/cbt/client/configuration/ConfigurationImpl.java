@@ -36,7 +36,18 @@ public class ConfigurationImpl extends AbstractConfiguration {
       public File convert(String s) {
          return cleanFile(s);
       }
-   }   
+   }
+
+   /**
+    * Password converter used for md5 hashing the password
+    */
+   public static class PasswordConverter implements IStringConverter<String> {
+
+      @Override
+      public String convert(String value) {
+         return Utils.md5(value);
+      }
+   }
 
    @Parameter(names = {"--workspace", "-w"}, description = "Client workspace path where temporary files will be stored")
    private File workspace = getTempDirectory();
@@ -46,7 +57,7 @@ public class ConfigurationImpl extends AbstractConfiguration {
    private String server;
    @Parameter(names = {"--username", "-u"}, required = true, description = "User name to use to login to the server")
    private String username;
-   @Parameter(names = {"--password", "-p"}, required = true, description = "User name to use to login to the server")
+   @Parameter(names = {"--password", "-p"}, converter = PasswordConverter.class, required = true, description = "User name to use to login to the server")
    private String password;
    @Parameter(names = {"--debug"}, hidden = true)
    private boolean debug;
