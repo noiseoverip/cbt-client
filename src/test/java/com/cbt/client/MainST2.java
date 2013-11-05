@@ -21,8 +21,10 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
@@ -58,7 +60,7 @@ public class MainST2 {
       for (int i = 0; i < NUMBER_OF_DEVICES; i++) {
          IDevice device = mock(IDevice.class);
          when(device.isOnline()).thenReturn(true);
-         when(device.getSerialNumber()).thenReturn(UUID.randomUUID().toString());
+         when(device.getSerialNumber()).thenReturn("TestEater:" + i);
          when(device.getProperty("ro.product.manufacturer")).thenReturn("HTC");
          when(device.getProperty("ro.product.model")).thenReturn("somemodel");
          deviceMap.put(device.getSerialNumber(), device);
@@ -119,7 +121,7 @@ public class MainST2 {
          StringBuilder out = new StringBuilder(e.getLocalizedMessage()).append("\n\n");
          jc.usage(out);
          logger.error(out.toString());
-         return;
+         Assert.fail("Required options not provided:" + e.getMessage());
       }
       if (parsedArgs.isHelp()) {
          jc.usage();
@@ -155,5 +157,4 @@ public class MainST2 {
       pool.shutdownNow();
       logger.info("Application finished");
    }
-
 }
