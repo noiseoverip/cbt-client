@@ -13,11 +13,14 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.client.filter.LoggingFilter;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,16 +38,17 @@ public class WsClient {
    private final String serverUrl;
    private final File workspace;
    private final Logger logger = Logger.getLogger(WsClient.class);
-   private final ClientAuthFilter authFilter;
+   private final HTTPBasicAuthFilter authFilter;
    private final boolean debug;
    private Client jerseyClient;
 
    @Inject
-   public WsClient(Configuration config, ClientAuthFilter authFilter) {
+   public WsClient(Configuration config) {
       this.serverUrl = config.getServer();
       this.workspace = config.getWorkspace();
       this.debug = config.isDebug();
-      this.authFilter = authFilter;
+      logger.debug("Using creds: " + config.getUsername() + " workspace: " + config.getPassword());
+      this.authFilter = new HTTPBasicAuthFilter(config.getUsername(), config.getPassword());
       logger.debug("Cbt client using URL: " + serverUrl + " workspace: " + workspace);
    }
 

@@ -1,14 +1,13 @@
 package com.cbt.client.guice;
 
+import javax.inject.Singleton;
+
 import com.cbt.client.CbtClient;
 import com.cbt.client.device.DeviceMonitor;
 import com.cbt.client.device.DeviceWorker;
 import com.cbt.client.util.Utils;
-import com.cbt.client.ws.ClientAuthFilter;
 import com.cbt.client.ws.WsClient;
 import com.google.inject.AbstractModule;
-
-import javax.inject.Singleton;
 
 /**
  * Main guice module
@@ -23,8 +22,7 @@ public class GuiceModuleMain extends AbstractModule {
       bind(CbtClient.class);
       bind(DeviceMonitor.class);
       bind(DeviceWorker.class);
-      bind(WsClient.class);
-      bind(ClientAuthFilter.class).in(Singleton.class);
+      bind(WsClient.class);    
       bind(Utils.class).in(Singleton.class);
    }
 }
