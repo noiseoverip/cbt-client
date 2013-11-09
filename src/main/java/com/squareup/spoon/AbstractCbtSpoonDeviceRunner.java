@@ -286,14 +286,23 @@ public abstract class AbstractCbtSpoonDeviceRunner {
          result.addException(e);
       }
 
+      try {
+         device.uninstallPackage(appPackage);
+      } catch (InstallException e) {
+         logError("[%s] app apk uninstall failed.  Error [%s]", serial, e.getMessage());
+      }
+      removeTestPackage(device, testPackage);
+
       return result.build();
    }
+
+   protected abstract void removeTestPackage(IDevice device, String testPackage);
 
    protected void installAppPackage(IDevice device) throws InstallException {
       // Now install the main application and the instrumentation application.
       String installError = device.installPackage(apk.getAbsolutePath(), true);
       if (installError != null) {
-         logInfo("[%s] app apk install failed.  Error [%s]", serial, installError);
+         logError("[%s] app apk install failed.  Error [%s]", serial, installError);
          throw new InstallException(installError, null);
       }
    }

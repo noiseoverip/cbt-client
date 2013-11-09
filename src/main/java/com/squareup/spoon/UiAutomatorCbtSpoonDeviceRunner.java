@@ -2,10 +2,14 @@ package com.squareup.spoon;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.android.ddmlib.Log;
+import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.IRemoteAndroidTestRunner;
 import com.squareup.spoon.uiautomator.RemoteUiAutomatorTestRunner;
 
 import java.io.File;
+
+import static com.squareup.spoon.SpoonLogger.logError;
 
 /**
  * Class UiAutomatorCbtSpoonDeviceRunner
@@ -32,6 +36,30 @@ public class UiAutomatorCbtSpoonDeviceRunner extends AbstractCbtSpoonDeviceRunne
    UiAutomatorCbtSpoonDeviceRunner(File sdk, File apk, File output, String serial, boolean debug, boolean noAnimations, int adbTimeout, String classpath, String className, String methodName, IRemoteAndroidTestRunner.TestSize testSize, boolean disableScreenshot) {
       super(sdk, apk, output, serial, debug, noAnimations, adbTimeout, classpath, className, methodName, testSize, disableScreenshot);
 
+   }
+
+   @Override
+   protected void removeTestPackage(IDevice device, String testPackages) {
+      MultiLineReceiver receiver = new MultiLineReceiver() {
+         @Override
+         public void processNewLines(String[] lines) {
+            for (String line : lines) {
+               Log.v(this.getClass().getName(), line);
+            }
+         }
+
+         @Override
+         public boolean isCancelled() {
+            return false;
+         }
+      };
+      for (String testPackage : testPackages.split(" ")) {
+         try {
+            device.executeShellCommand(String.format("rm %s%s", TEST_PACKAGE_PATH, testPackage), receiver);
+         } catch (Exception e) {
+            logError("[%s] test apk removal failed.  Error [%s]", device.getSerialNumber(), e.getMessage());
+         }
+      }
    }
 
    @Override

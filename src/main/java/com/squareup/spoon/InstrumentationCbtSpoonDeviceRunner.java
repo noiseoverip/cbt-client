@@ -7,6 +7,7 @@ import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 
 import java.io.File;
 
+import static com.squareup.spoon.SpoonLogger.logError;
 import static com.squareup.spoon.SpoonLogger.logInfo;
 
 /**
@@ -36,6 +37,15 @@ public class InstrumentationCbtSpoonDeviceRunner extends AbstractCbtSpoonDeviceR
       super(sdk, apk, output, serial, debug, noAnimations, adbTimeout, classpath, className, methodName, testSize, disableScreenshot);
       setTestApk(testApk);
       setInstrumentationInfo(instrumentationInfo);
+   }
+
+   @Override
+   protected void removeTestPackage(IDevice device, String testPackage) {
+      try {
+         device.uninstallPackage(testPackage);
+      } catch (InstallException e) {
+         logError("[%s] test apk uninstall failed.  Error [%s]", device.getSerialNumber(), e.getMessage());
+      }
    }
 
    @Override

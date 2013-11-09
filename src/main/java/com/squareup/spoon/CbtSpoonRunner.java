@@ -347,7 +347,7 @@ public final class CbtSpoonRunner {
       final SpoonInstrumentationInfo testInfo[] = new SpoonInstrumentationInfo[instrumentationApks.length];
       for (int i = 0; i < instrumentationApks.length; i++) {
          if (uiAutomator) {
-            testInfo[i] = new SpoonInstrumentationInfo(applicationApk.getName(),
+            testInfo[i] = new SpoonInstrumentationInfo(CbtSpoonUtils.getAppPackage(applicationApk),
                   instrumentationApks[i].getName(), testRunner);
          } else {
             testInfo[i] = parseFromFile(instrumentationApks[i]);
